@@ -1,0 +1,2775 @@
+{
+  "item": [
+    {
+      "id": "fb43d67c-eb56-4af5-a55b-0feaf7d356af",
+      "name": "Score a single IP",
+      "request": {
+        "name": "Score a single IP",
+        "description": {},
+        "url": {
+          "path": [
+            "check"
+          ],
+          "host": [
+            "{{base_url}}"
+          ],
+          "query": [
+            {
+              "disabled": false,
+              "description": {
+                "content": "(Required) IPv4/IPv6 address to score",
+                "type": "text/plain"
+              },
+              "key": "ip",
+              "value": "8.8.8.8"
+            },
+            {
+              "disabled": false,
+              "description": {
+                "content": "",
+                "type": "text/plain"
+              },
+              "key": "strictness",
+              "value": "2"
+            },
+            {
+              "disabled": true,
+              "description": {
+                "content": "",
+                "type": "text/plain"
+              },
+              "key": "mobile",
+              "value": "<boolean>"
+            },
+            {
+              "disabled": true,
+              "description": {
+                "content": "",
+                "type": "text/plain"
+              },
+              "key": "user_agent",
+              "value": "<string>"
+            },
+            {
+              "disabled": true,
+              "description": {
+                "content": "",
+                "type": "text/plain"
+              },
+              "key": "user_language",
+              "value": "<string>"
+            }
+          ],
+          "variable": [],
+          "raw": "{{base_url}}/check?ip=8.8.8.8&strictness=2"
+        },
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "method": "GET",
+        "body": {},
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{api_key}}"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "id": "ab0deba4-2f9a-43b4-889b-6bbdb8529b1c",
+          "name": "Score result",
+          "originalRequest": {
+            "url": {
+              "path": [
+                "check"
+              ],
+              "host": [
+                "{{base_url}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "description": {
+                    "content": "(Required) IPv4/IPv6 address to score",
+                    "type": "text/plain"
+                  },
+                  "key": "ip",
+                  "value": "8.8.8.8"
+                },
+                {
+                  "disabled": false,
+                  "description": {
+                    "content": "",
+                    "type": "text/plain"
+                  },
+                  "key": "strictness",
+                  "value": "2"
+                },
+                {
+                  "disabled": true,
+                  "description": {
+                    "content": "",
+                    "type": "text/plain"
+                  },
+                  "key": "mobile",
+                  "value": "<boolean>"
+                },
+                {
+                  "disabled": true,
+                  "description": {
+                    "content": "",
+                    "type": "text/plain"
+                  },
+                  "key": "user_agent",
+                  "value": "<string>"
+                },
+                {
+                  "disabled": true,
+                  "description": {
+                    "content": "",
+                    "type": "text/plain"
+                  },
+                  "key": "user_language",
+                  "value": "<string>"
+                }
+              ],
+              "variable": [],
+              "raw": "{{base_url}}/check?ip=8.8.8.8&strictness=2"
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "description": {
+                  "content": "Added as a part of security scheme: bearer",
+                  "type": "text/plain"
+                },
+                "key": "Authorization",
+                "value": "Bearer <token>"
+              }
+            ],
+            "method": "GET",
+            "body": {}
+          },
+          "status": "OK",
+          "code": 200,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": \"<boolean>\",\n  \"data\": {\n    \"fraud_score\": \"<integer>\",\n    \"proxy\": \"<boolean>\",\n    \"vpn\": \"<boolean>\",\n    \"tor\": \"<boolean>\",\n    \"active_vpn\": \"<boolean>\",\n    \"active_tor\": \"<boolean>\",\n    \"recent_abuse\": \"<boolean>\",\n    \"bot_status\": \"<boolean>\",\n    \"country_code\": \"<string,null>\",\n    \"region\": \"<string,null>\",\n    \"city\": \"<string,null>\",\n    \"ISP\": \"<string,null>\",\n    \"organization\": \"<string,null>\",\n    \"ASN\": \"<integer,null>\",\n    \"operating_system\": \"<string,null>\",\n    \"browser\": \"<string,null>\",\n    \"device_brand\": \"<string,null>\",\n    \"device_model\": \"<string,null>\"\n  },\n  \"credits_remaining\": \"<integer>\"\n}",
+          "cookie": [],
+          "_postman_previewlanguage": "json"
+        },
+        {
+          "id": "c88423bd-6b21-419a-a5fa-ed4a3a9ea335",
+          "name": "Invalid or missing API token",
+          "originalRequest": {
+            "url": {
+              "path": [
+                "check"
+              ],
+              "host": [
+                "{{base_url}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "description": {
+                    "content": "(Required) IPv4/IPv6 address to score",
+                    "type": "text/plain"
+                  },
+                  "key": "ip",
+                  "value": "8.8.8.8"
+                },
+                {
+                  "disabled": false,
+                  "description": {
+                    "content": "",
+                    "type": "text/plain"
+                  },
+                  "key": "strictness",
+                  "value": "2"
+                },
+                {
+                  "disabled": true,
+                  "description": {
+                    "content": "",
+                    "type": "text/plain"
+                  },
+                  "key": "mobile",
+                  "value": "<boolean>"
+                },
+                {
+                  "disabled": true,
+                  "description": {
+                    "content": "",
+                    "type": "text/plain"
+                  },
+                  "key": "user_agent",
+                  "value": "<string>"
+                },
+                {
+                  "disabled": true,
+                  "description": {
+                    "content": "",
+                    "type": "text/plain"
+                  },
+                  "key": "user_language",
+                  "value": "<string>"
+                }
+              ],
+              "variable": [],
+              "raw": "{{base_url}}/check?ip=8.8.8.8&strictness=2"
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "description": {
+                  "content": "Added as a part of security scheme: bearer",
+                  "type": "text/plain"
+                },
+                "key": "Authorization",
+                "value": "Bearer <token>"
+              }
+            ],
+            "method": "GET",
+            "body": {}
+          },
+          "status": "Unauthorized",
+          "code": 401,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": false,\n  \"message\": \"<string>\"\n}",
+          "cookie": [],
+          "_postman_previewlanguage": "json"
+        },
+        {
+          "id": "5979fa61-3242-487f-af00-3fb957c6a3f0",
+          "name": "Insufficient credits",
+          "originalRequest": {
+            "url": {
+              "path": [
+                "check"
+              ],
+              "host": [
+                "{{base_url}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "description": {
+                    "content": "(Required) IPv4/IPv6 address to score",
+                    "type": "text/plain"
+                  },
+                  "key": "ip",
+                  "value": "8.8.8.8"
+                },
+                {
+                  "disabled": false,
+                  "description": {
+                    "content": "",
+                    "type": "text/plain"
+                  },
+                  "key": "strictness",
+                  "value": "2"
+                },
+                {
+                  "disabled": true,
+                  "description": {
+                    "content": "",
+                    "type": "text/plain"
+                  },
+                  "key": "mobile",
+                  "value": "<boolean>"
+                },
+                {
+                  "disabled": true,
+                  "description": {
+                    "content": "",
+                    "type": "text/plain"
+                  },
+                  "key": "user_agent",
+                  "value": "<string>"
+                },
+                {
+                  "disabled": true,
+                  "description": {
+                    "content": "",
+                    "type": "text/plain"
+                  },
+                  "key": "user_language",
+                  "value": "<string>"
+                }
+              ],
+              "variable": [],
+              "raw": "{{base_url}}/check?ip=8.8.8.8&strictness=2"
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "description": {
+                  "content": "Added as a part of security scheme: bearer",
+                  "type": "text/plain"
+                },
+                "key": "Authorization",
+                "value": "Bearer <token>"
+              }
+            ],
+            "method": "GET",
+            "body": {}
+          },
+          "status": "Payment Required",
+          "code": 402,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": false,\n  \"message\": \"<string>\"\n}",
+          "cookie": [],
+          "_postman_previewlanguage": "json"
+        },
+        {
+          "id": "813348a3-d86d-48d8-9863-b503c88ce73c",
+          "name": "Invalid input",
+          "originalRequest": {
+            "url": {
+              "path": [
+                "check"
+              ],
+              "host": [
+                "{{base_url}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "description": {
+                    "content": "(Required) IPv4/IPv6 address to score",
+                    "type": "text/plain"
+                  },
+                  "key": "ip",
+                  "value": "8.8.8.8"
+                },
+                {
+                  "disabled": false,
+                  "description": {
+                    "content": "",
+                    "type": "text/plain"
+                  },
+                  "key": "strictness",
+                  "value": "2"
+                },
+                {
+                  "disabled": true,
+                  "description": {
+                    "content": "",
+                    "type": "text/plain"
+                  },
+                  "key": "mobile",
+                  "value": "<boolean>"
+                },
+                {
+                  "disabled": true,
+                  "description": {
+                    "content": "",
+                    "type": "text/plain"
+                  },
+                  "key": "user_agent",
+                  "value": "<string>"
+                },
+                {
+                  "disabled": true,
+                  "description": {
+                    "content": "",
+                    "type": "text/plain"
+                  },
+                  "key": "user_language",
+                  "value": "<string>"
+                }
+              ],
+              "variable": [],
+              "raw": "{{base_url}}/check?ip=8.8.8.8&strictness=2"
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "description": {
+                  "content": "Added as a part of security scheme: bearer",
+                  "type": "text/plain"
+                },
+                "key": "Authorization",
+                "value": "Bearer <token>"
+              }
+            ],
+            "method": "GET",
+            "body": {}
+          },
+          "status": "Unprocessable Entity (WebDAV) (RFC 4918)",
+          "code": 422,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": false,\n  \"message\": \"<string>\"\n}",
+          "cookie": [],
+          "_postman_previewlanguage": "json"
+        },
+        {
+          "id": "18530a6d-05fd-48e8-851b-71f3cdb861f8",
+          "name": "Rate limit exceeded",
+          "originalRequest": {
+            "url": {
+              "path": [
+                "check"
+              ],
+              "host": [
+                "{{base_url}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "description": {
+                    "content": "(Required) IPv4/IPv6 address to score",
+                    "type": "text/plain"
+                  },
+                  "key": "ip",
+                  "value": "8.8.8.8"
+                },
+                {
+                  "disabled": false,
+                  "description": {
+                    "content": "",
+                    "type": "text/plain"
+                  },
+                  "key": "strictness",
+                  "value": "2"
+                },
+                {
+                  "disabled": true,
+                  "description": {
+                    "content": "",
+                    "type": "text/plain"
+                  },
+                  "key": "mobile",
+                  "value": "<boolean>"
+                },
+                {
+                  "disabled": true,
+                  "description": {
+                    "content": "",
+                    "type": "text/plain"
+                  },
+                  "key": "user_agent",
+                  "value": "<string>"
+                },
+                {
+                  "disabled": true,
+                  "description": {
+                    "content": "",
+                    "type": "text/plain"
+                  },
+                  "key": "user_language",
+                  "value": "<string>"
+                }
+              ],
+              "variable": [],
+              "raw": "{{base_url}}/check?ip=8.8.8.8&strictness=2"
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "description": {
+                  "content": "Added as a part of security scheme: bearer",
+                  "type": "text/plain"
+                },
+                "key": "Authorization",
+                "value": "Bearer <token>"
+              }
+            ],
+            "method": "GET",
+            "body": {}
+          },
+          "status": "Too Many Requests",
+          "code": 429,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": false,\n  \"message\": \"<string>\"\n}",
+          "cookie": [],
+          "_postman_previewlanguage": "json"
+        },
+        {
+          "id": "4e0f0947-fb37-42e9-ab42-d52e2550d2a7",
+          "name": "Upstream unavailable",
+          "originalRequest": {
+            "url": {
+              "path": [
+                "check"
+              ],
+              "host": [
+                "{{base_url}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "description": {
+                    "content": "(Required) IPv4/IPv6 address to score",
+                    "type": "text/plain"
+                  },
+                  "key": "ip",
+                  "value": "8.8.8.8"
+                },
+                {
+                  "disabled": false,
+                  "description": {
+                    "content": "",
+                    "type": "text/plain"
+                  },
+                  "key": "strictness",
+                  "value": "2"
+                },
+                {
+                  "disabled": true,
+                  "description": {
+                    "content": "",
+                    "type": "text/plain"
+                  },
+                  "key": "mobile",
+                  "value": "<boolean>"
+                },
+                {
+                  "disabled": true,
+                  "description": {
+                    "content": "",
+                    "type": "text/plain"
+                  },
+                  "key": "user_agent",
+                  "value": "<string>"
+                },
+                {
+                  "disabled": true,
+                  "description": {
+                    "content": "",
+                    "type": "text/plain"
+                  },
+                  "key": "user_language",
+                  "value": "<string>"
+                }
+              ],
+              "variable": [],
+              "raw": "{{base_url}}/check?ip=8.8.8.8&strictness=2"
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "description": {
+                  "content": "Added as a part of security scheme: bearer",
+                  "type": "text/plain"
+                },
+                "key": "Authorization",
+                "value": "Bearer <token>"
+              }
+            ],
+            "method": "GET",
+            "body": {}
+          },
+          "status": "Bad Gateway",
+          "code": 502,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": false,\n  \"message\": \"<string>\"\n}",
+          "cookie": [],
+          "_postman_previewlanguage": "json"
+        }
+      ],
+      "event": [],
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      }
+    },
+    {
+      "id": "c5fed80a-8850-43e0-9bb6-1726e5471969",
+      "name": "Score a single email address",
+      "request": {
+        "name": "Score a single email address",
+        "description": {},
+        "url": {
+          "path": [
+            "check",
+            "email"
+          ],
+          "host": [
+            "{{base_url}}"
+          ],
+          "query": [
+            {
+              "disabled": false,
+              "description": {
+                "content": "(Required) Email address to score",
+                "type": "text/plain"
+              },
+              "key": "email",
+              "value": "user@example.com"
+            }
+          ],
+          "variable": [],
+          "raw": "{{base_url}}/check/email?email=user@example.com"
+        },
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "method": "GET",
+        "body": {},
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{api_key}}"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "id": "7be9d5dc-25ab-4e77-888e-e29ed5dcefcd",
+          "name": "Score result",
+          "originalRequest": {
+            "url": {
+              "path": [
+                "check",
+                "email"
+              ],
+              "host": [
+                "{{base_url}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "description": {
+                    "content": "(Required) Email address to score",
+                    "type": "text/plain"
+                  },
+                  "key": "email",
+                  "value": "user@example.com"
+                }
+              ],
+              "variable": [],
+              "raw": "{{base_url}}/check/email?email=user@example.com"
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "description": {
+                  "content": "Added as a part of security scheme: bearer",
+                  "type": "text/plain"
+                },
+                "key": "Authorization",
+                "value": "Bearer <token>"
+              }
+            ],
+            "method": "GET",
+            "body": {}
+          },
+          "status": "OK",
+          "code": 200,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": \"<boolean>\",\n  \"data\": {\n    \"valid\": \"<boolean>\",\n    \"fraud_score\": \"<integer>\",\n    \"disposable\": \"<boolean>\",\n    \"deliverability\": \"<string>\",\n    \"smtp_score\": \"<integer>\",\n    \"overall_score\": \"<integer>\",\n    \"catch_all\": \"<boolean>\",\n    \"generic\": \"<boolean>\",\n    \"common\": \"<boolean>\",\n    \"dns_valid\": \"<boolean>\",\n    \"honeypot\": \"<boolean>\",\n    \"frequent_complainer\": \"<boolean>\",\n    \"suspect\": \"<boolean>\",\n    \"recent_abuse\": \"<boolean>\",\n    \"leaked\": \"<boolean>\",\n    \"spam_trap_score\": \"<string>\",\n    \"risky_tld\": \"<boolean>\",\n    \"spf_record\": \"<boolean>\",\n    \"dmarc_record\": \"<boolean>\",\n    \"first_seen\": \"<string,null>\",\n    \"domain_age\": \"<string,null>\",\n    \"result_type\": \"<string>\",\n    \"sanitized_email\": \"<string>\"\n  },\n  \"credits_remaining\": \"<integer>\"\n}",
+          "cookie": [],
+          "_postman_previewlanguage": "json"
+        },
+        {
+          "id": "72aa8d4a-db69-4aaa-9913-14e18cc6beed",
+          "name": "Invalid or missing API token",
+          "originalRequest": {
+            "url": {
+              "path": [
+                "check",
+                "email"
+              ],
+              "host": [
+                "{{base_url}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "description": {
+                    "content": "(Required) Email address to score",
+                    "type": "text/plain"
+                  },
+                  "key": "email",
+                  "value": "user@example.com"
+                }
+              ],
+              "variable": [],
+              "raw": "{{base_url}}/check/email?email=user@example.com"
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "description": {
+                  "content": "Added as a part of security scheme: bearer",
+                  "type": "text/plain"
+                },
+                "key": "Authorization",
+                "value": "Bearer <token>"
+              }
+            ],
+            "method": "GET",
+            "body": {}
+          },
+          "status": "Unauthorized",
+          "code": 401,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": false,\n  \"message\": \"<string>\"\n}",
+          "cookie": [],
+          "_postman_previewlanguage": "json"
+        },
+        {
+          "id": "7d1bb3a1-c78f-46a4-8b6c-28a2c4bbd880",
+          "name": "Insufficient credits",
+          "originalRequest": {
+            "url": {
+              "path": [
+                "check",
+                "email"
+              ],
+              "host": [
+                "{{base_url}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "description": {
+                    "content": "(Required) Email address to score",
+                    "type": "text/plain"
+                  },
+                  "key": "email",
+                  "value": "user@example.com"
+                }
+              ],
+              "variable": [],
+              "raw": "{{base_url}}/check/email?email=user@example.com"
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "description": {
+                  "content": "Added as a part of security scheme: bearer",
+                  "type": "text/plain"
+                },
+                "key": "Authorization",
+                "value": "Bearer <token>"
+              }
+            ],
+            "method": "GET",
+            "body": {}
+          },
+          "status": "Payment Required",
+          "code": 402,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": false,\n  \"message\": \"<string>\"\n}",
+          "cookie": [],
+          "_postman_previewlanguage": "json"
+        },
+        {
+          "id": "51b1b7e9-ff8c-46b0-b8c2-53547d56cdf7",
+          "name": "Invalid input",
+          "originalRequest": {
+            "url": {
+              "path": [
+                "check",
+                "email"
+              ],
+              "host": [
+                "{{base_url}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "description": {
+                    "content": "(Required) Email address to score",
+                    "type": "text/plain"
+                  },
+                  "key": "email",
+                  "value": "user@example.com"
+                }
+              ],
+              "variable": [],
+              "raw": "{{base_url}}/check/email?email=user@example.com"
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "description": {
+                  "content": "Added as a part of security scheme: bearer",
+                  "type": "text/plain"
+                },
+                "key": "Authorization",
+                "value": "Bearer <token>"
+              }
+            ],
+            "method": "GET",
+            "body": {}
+          },
+          "status": "Unprocessable Entity (WebDAV) (RFC 4918)",
+          "code": 422,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": false,\n  \"message\": \"<string>\"\n}",
+          "cookie": [],
+          "_postman_previewlanguage": "json"
+        },
+        {
+          "id": "6b43d6df-0a4b-4ae9-b844-ae977ae39a1e",
+          "name": "Rate limit exceeded",
+          "originalRequest": {
+            "url": {
+              "path": [
+                "check",
+                "email"
+              ],
+              "host": [
+                "{{base_url}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "description": {
+                    "content": "(Required) Email address to score",
+                    "type": "text/plain"
+                  },
+                  "key": "email",
+                  "value": "user@example.com"
+                }
+              ],
+              "variable": [],
+              "raw": "{{base_url}}/check/email?email=user@example.com"
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "description": {
+                  "content": "Added as a part of security scheme: bearer",
+                  "type": "text/plain"
+                },
+                "key": "Authorization",
+                "value": "Bearer <token>"
+              }
+            ],
+            "method": "GET",
+            "body": {}
+          },
+          "status": "Too Many Requests",
+          "code": 429,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": false,\n  \"message\": \"<string>\"\n}",
+          "cookie": [],
+          "_postman_previewlanguage": "json"
+        },
+        {
+          "id": "80169b8e-a538-4ed9-81e2-30ab93d28a4b",
+          "name": "Upstream unavailable",
+          "originalRequest": {
+            "url": {
+              "path": [
+                "check",
+                "email"
+              ],
+              "host": [
+                "{{base_url}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "description": {
+                    "content": "(Required) Email address to score",
+                    "type": "text/plain"
+                  },
+                  "key": "email",
+                  "value": "user@example.com"
+                }
+              ],
+              "variable": [],
+              "raw": "{{base_url}}/check/email?email=user@example.com"
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "description": {
+                  "content": "Added as a part of security scheme: bearer",
+                  "type": "text/plain"
+                },
+                "key": "Authorization",
+                "value": "Bearer <token>"
+              }
+            ],
+            "method": "GET",
+            "body": {}
+          },
+          "status": "Bad Gateway",
+          "code": 502,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": false,\n  \"message\": \"<string>\"\n}",
+          "cookie": [],
+          "_postman_previewlanguage": "json"
+        }
+      ],
+      "event": [],
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      }
+    },
+    {
+      "id": "123c5094-4341-4411-931f-42187a9dc578",
+      "name": "Score a single phone number",
+      "request": {
+        "name": "Score a single phone number",
+        "description": {},
+        "url": {
+          "path": [
+            "check",
+            "phone"
+          ],
+          "host": [
+            "{{base_url}}"
+          ],
+          "query": [
+            {
+              "disabled": false,
+              "description": {
+                "content": "(Required) Phone number to score",
+                "type": "text/plain"
+              },
+              "key": "phone",
+              "value": "18176791808"
+            },
+            {
+              "disabled": false,
+              "description": {
+                "content": "ISO-3166 alpha-2 country hint, e.g. US",
+                "type": "text/plain"
+              },
+              "key": "country",
+              "value": "US"
+            }
+          ],
+          "variable": [],
+          "raw": "{{base_url}}/check/phone?phone=18176791808&country=US"
+        },
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "method": "GET",
+        "body": {},
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{api_key}}"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "id": "7adc1963-3274-4d8e-83c6-4472e1ed0df9",
+          "name": "Score result",
+          "originalRequest": {
+            "url": {
+              "path": [
+                "check",
+                "phone"
+              ],
+              "host": [
+                "{{base_url}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "description": {
+                    "content": "(Required) Phone number to score",
+                    "type": "text/plain"
+                  },
+                  "key": "phone",
+                  "value": "18176791808"
+                },
+                {
+                  "disabled": false,
+                  "description": {
+                    "content": "ISO-3166 alpha-2 country hint, e.g. US",
+                    "type": "text/plain"
+                  },
+                  "key": "country",
+                  "value": "US"
+                }
+              ],
+              "variable": [],
+              "raw": "{{base_url}}/check/phone?phone=18176791808&country=US"
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "description": {
+                  "content": "Added as a part of security scheme: bearer",
+                  "type": "text/plain"
+                },
+                "key": "Authorization",
+                "value": "Bearer <token>"
+              }
+            ],
+            "method": "GET",
+            "body": {}
+          },
+          "status": "OK",
+          "code": 200,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": \"<boolean>\",\n  \"data\": {\n    \"valid\": \"<boolean>\",\n    \"fraud_score\": \"<integer>\",\n    \"recent_abuse\": \"<boolean>\",\n    \"VOIP\": \"<boolean>\",\n    \"prepaid\": \"<boolean>\",\n    \"risky\": \"<boolean>\",\n    \"active\": \"<boolean>\",\n    \"carrier\": \"<string>\",\n    \"line_type\": \"<string>\",\n    \"country\": \"<string>\",\n    \"region\": \"<string>\",\n    \"city\": \"<string>\",\n    \"timezone\": \"<string>\",\n    \"zip_code\": \"<string>\",\n    \"dialing_code\": \"<integer>\",\n    \"do_not_call\": \"<boolean>\",\n    \"leaked\": \"<boolean>\",\n    \"spammer\": \"<boolean>\",\n    \"active_status\": \"<string>\",\n    \"formatted\": \"<string>\",\n    \"local_format\": \"<string>\"\n  },\n  \"credits_remaining\": \"<integer>\"\n}",
+          "cookie": [],
+          "_postman_previewlanguage": "json"
+        },
+        {
+          "id": "c49eb20e-3bec-4754-9238-8fc812c419e1",
+          "name": "Invalid or missing API token",
+          "originalRequest": {
+            "url": {
+              "path": [
+                "check",
+                "phone"
+              ],
+              "host": [
+                "{{base_url}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "description": {
+                    "content": "(Required) Phone number to score",
+                    "type": "text/plain"
+                  },
+                  "key": "phone",
+                  "value": "18176791808"
+                },
+                {
+                  "disabled": false,
+                  "description": {
+                    "content": "ISO-3166 alpha-2 country hint, e.g. US",
+                    "type": "text/plain"
+                  },
+                  "key": "country",
+                  "value": "US"
+                }
+              ],
+              "variable": [],
+              "raw": "{{base_url}}/check/phone?phone=18176791808&country=US"
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "description": {
+                  "content": "Added as a part of security scheme: bearer",
+                  "type": "text/plain"
+                },
+                "key": "Authorization",
+                "value": "Bearer <token>"
+              }
+            ],
+            "method": "GET",
+            "body": {}
+          },
+          "status": "Unauthorized",
+          "code": 401,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": false,\n  \"message\": \"<string>\"\n}",
+          "cookie": [],
+          "_postman_previewlanguage": "json"
+        },
+        {
+          "id": "dbb04275-9ce2-4c85-b490-5eec3e7e60a2",
+          "name": "Insufficient credits",
+          "originalRequest": {
+            "url": {
+              "path": [
+                "check",
+                "phone"
+              ],
+              "host": [
+                "{{base_url}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "description": {
+                    "content": "(Required) Phone number to score",
+                    "type": "text/plain"
+                  },
+                  "key": "phone",
+                  "value": "18176791808"
+                },
+                {
+                  "disabled": false,
+                  "description": {
+                    "content": "ISO-3166 alpha-2 country hint, e.g. US",
+                    "type": "text/plain"
+                  },
+                  "key": "country",
+                  "value": "US"
+                }
+              ],
+              "variable": [],
+              "raw": "{{base_url}}/check/phone?phone=18176791808&country=US"
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "description": {
+                  "content": "Added as a part of security scheme: bearer",
+                  "type": "text/plain"
+                },
+                "key": "Authorization",
+                "value": "Bearer <token>"
+              }
+            ],
+            "method": "GET",
+            "body": {}
+          },
+          "status": "Payment Required",
+          "code": 402,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": false,\n  \"message\": \"<string>\"\n}",
+          "cookie": [],
+          "_postman_previewlanguage": "json"
+        },
+        {
+          "id": "af5c30df-a048-404b-86b0-dfb767ca3e4c",
+          "name": "Invalid input",
+          "originalRequest": {
+            "url": {
+              "path": [
+                "check",
+                "phone"
+              ],
+              "host": [
+                "{{base_url}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "description": {
+                    "content": "(Required) Phone number to score",
+                    "type": "text/plain"
+                  },
+                  "key": "phone",
+                  "value": "18176791808"
+                },
+                {
+                  "disabled": false,
+                  "description": {
+                    "content": "ISO-3166 alpha-2 country hint, e.g. US",
+                    "type": "text/plain"
+                  },
+                  "key": "country",
+                  "value": "US"
+                }
+              ],
+              "variable": [],
+              "raw": "{{base_url}}/check/phone?phone=18176791808&country=US"
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "description": {
+                  "content": "Added as a part of security scheme: bearer",
+                  "type": "text/plain"
+                },
+                "key": "Authorization",
+                "value": "Bearer <token>"
+              }
+            ],
+            "method": "GET",
+            "body": {}
+          },
+          "status": "Unprocessable Entity (WebDAV) (RFC 4918)",
+          "code": 422,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": false,\n  \"message\": \"<string>\"\n}",
+          "cookie": [],
+          "_postman_previewlanguage": "json"
+        },
+        {
+          "id": "2040a004-dab3-4dcf-b09d-0338002c5d4d",
+          "name": "Rate limit exceeded",
+          "originalRequest": {
+            "url": {
+              "path": [
+                "check",
+                "phone"
+              ],
+              "host": [
+                "{{base_url}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "description": {
+                    "content": "(Required) Phone number to score",
+                    "type": "text/plain"
+                  },
+                  "key": "phone",
+                  "value": "18176791808"
+                },
+                {
+                  "disabled": false,
+                  "description": {
+                    "content": "ISO-3166 alpha-2 country hint, e.g. US",
+                    "type": "text/plain"
+                  },
+                  "key": "country",
+                  "value": "US"
+                }
+              ],
+              "variable": [],
+              "raw": "{{base_url}}/check/phone?phone=18176791808&country=US"
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "description": {
+                  "content": "Added as a part of security scheme: bearer",
+                  "type": "text/plain"
+                },
+                "key": "Authorization",
+                "value": "Bearer <token>"
+              }
+            ],
+            "method": "GET",
+            "body": {}
+          },
+          "status": "Too Many Requests",
+          "code": 429,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": false,\n  \"message\": \"<string>\"\n}",
+          "cookie": [],
+          "_postman_previewlanguage": "json"
+        },
+        {
+          "id": "adbed2ca-5ce8-4796-a44e-94f96cc114c1",
+          "name": "Upstream unavailable",
+          "originalRequest": {
+            "url": {
+              "path": [
+                "check",
+                "phone"
+              ],
+              "host": [
+                "{{base_url}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "description": {
+                    "content": "(Required) Phone number to score",
+                    "type": "text/plain"
+                  },
+                  "key": "phone",
+                  "value": "18176791808"
+                },
+                {
+                  "disabled": false,
+                  "description": {
+                    "content": "ISO-3166 alpha-2 country hint, e.g. US",
+                    "type": "text/plain"
+                  },
+                  "key": "country",
+                  "value": "US"
+                }
+              ],
+              "variable": [],
+              "raw": "{{base_url}}/check/phone?phone=18176791808&country=US"
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "description": {
+                  "content": "Added as a part of security scheme: bearer",
+                  "type": "text/plain"
+                },
+                "key": "Authorization",
+                "value": "Bearer <token>"
+              }
+            ],
+            "method": "GET",
+            "body": {}
+          },
+          "status": "Bad Gateway",
+          "code": 502,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": false,\n  \"message\": \"<string>\"\n}",
+          "cookie": [],
+          "_postman_previewlanguage": "json"
+        }
+      ],
+      "event": [],
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      }
+    },
+    {
+      "id": "6d545b51-36a3-4292-8327-8f12efca52e2",
+      "name": "Score up to 100 IPs in one request",
+      "request": {
+        "name": "Score up to 100 IPs in one request",
+        "description": {},
+        "url": {
+          "path": [
+            "check",
+            "batch"
+          ],
+          "host": [
+            "{{base_url}}"
+          ],
+          "query": [],
+          "variable": [],
+          "raw": "{{base_url}}/check/batch"
+        },
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "method": "POST",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"ips\": [\n    \"8.8.8.8\",\n    \"1.1.1.1\"\n  ],\n  \"strictness\": 2\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{api_key}}"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "id": "1f63d262-b253-4eab-a0ab-eae2e168ec8b",
+          "name": "Per-IP results",
+          "originalRequest": {
+            "url": {
+              "path": [
+                "check",
+                "batch"
+              ],
+              "host": [
+                "{{base_url}}"
+              ],
+              "query": [],
+              "variable": [],
+              "raw": "{{base_url}}/check/batch"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "description": {
+                  "content": "Added as a part of security scheme: bearer",
+                  "type": "text/plain"
+                },
+                "key": "Authorization",
+                "value": "Bearer <token>"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ips\": [\n    \"8.8.8.8\",\n    \"1.1.1.1\"\n  ],\n  \"strictness\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": \"<boolean>\",\n  \"results\": [\n    {\n      \"ip\": \"<string>\",\n      \"success\": \"<boolean>\",\n      \"data\": {\n        \"fraud_score\": \"<integer>\",\n        \"proxy\": \"<boolean>\",\n        \"vpn\": \"<boolean>\",\n        \"tor\": \"<boolean>\",\n        \"active_vpn\": \"<boolean>\",\n        \"active_tor\": \"<boolean>\",\n        \"recent_abuse\": \"<boolean>\",\n        \"bot_status\": \"<boolean>\",\n        \"country_code\": \"<string,null>\",\n        \"region\": \"<string,null>\",\n        \"city\": \"<string,null>\",\n        \"ISP\": \"<string,null>\",\n        \"organization\": \"<string,null>\",\n        \"ASN\": \"<integer,null>\",\n        \"operating_system\": \"<string,null>\",\n        \"browser\": \"<string,null>\",\n        \"device_brand\": \"<string,null>\",\n        \"device_model\": \"<string,null>\"\n      },\n      \"error\": \"invalid_ip\"\n    },\n    {\n      \"ip\": \"<string>\",\n      \"success\": \"<boolean>\",\n      \"data\": {\n        \"fraud_score\": \"<integer>\",\n        \"proxy\": \"<boolean>\",\n        \"vpn\": \"<boolean>\",\n        \"tor\": \"<boolean>\",\n        \"active_vpn\": \"<boolean>\",\n        \"active_tor\": \"<boolean>\",\n        \"recent_abuse\": \"<boolean>\",\n        \"bot_status\": \"<boolean>\",\n        \"country_code\": \"<string,null>\",\n        \"region\": \"<string,null>\",\n        \"city\": \"<string,null>\",\n        \"ISP\": \"<string,null>\",\n        \"organization\": \"<string,null>\",\n        \"ASN\": \"<integer,null>\",\n        \"operating_system\": \"<string,null>\",\n        \"browser\": \"<string,null>\",\n        \"device_brand\": \"<string,null>\",\n        \"device_model\": \"<string,null>\"\n      },\n      \"error\": \"insufficient_credits\"\n    }\n  ],\n  \"credits_remaining\": \"<integer>\"\n}",
+          "cookie": [],
+          "_postman_previewlanguage": "json"
+        },
+        {
+          "id": "16cac213-9d0d-4fdf-aab1-68bff1d29a84",
+          "name": "Invalid or missing API token",
+          "originalRequest": {
+            "url": {
+              "path": [
+                "check",
+                "batch"
+              ],
+              "host": [
+                "{{base_url}}"
+              ],
+              "query": [],
+              "variable": [],
+              "raw": "{{base_url}}/check/batch"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "description": {
+                  "content": "Added as a part of security scheme: bearer",
+                  "type": "text/plain"
+                },
+                "key": "Authorization",
+                "value": "Bearer <token>"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ips\": [\n    \"8.8.8.8\",\n    \"1.1.1.1\"\n  ],\n  \"strictness\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "status": "Unauthorized",
+          "code": 401,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": false,\n  \"message\": \"<string>\"\n}",
+          "cookie": [],
+          "_postman_previewlanguage": "json"
+        },
+        {
+          "id": "2f91ab22-d72d-416b-a46f-174b6f5f94fd",
+          "name": "Insufficient credits (balance was zero)",
+          "originalRequest": {
+            "url": {
+              "path": [
+                "check",
+                "batch"
+              ],
+              "host": [
+                "{{base_url}}"
+              ],
+              "query": [],
+              "variable": [],
+              "raw": "{{base_url}}/check/batch"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "description": {
+                  "content": "Added as a part of security scheme: bearer",
+                  "type": "text/plain"
+                },
+                "key": "Authorization",
+                "value": "Bearer <token>"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ips\": [\n    \"8.8.8.8\",\n    \"1.1.1.1\"\n  ],\n  \"strictness\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "status": "Payment Required",
+          "code": 402,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": false,\n  \"message\": \"<string>\"\n}",
+          "cookie": [],
+          "_postman_previewlanguage": "json"
+        },
+        {
+          "id": "dff474c9-1ae3-4a8b-a1a8-26c5510924aa",
+          "name": "Invalid envelope",
+          "originalRequest": {
+            "url": {
+              "path": [
+                "check",
+                "batch"
+              ],
+              "host": [
+                "{{base_url}}"
+              ],
+              "query": [],
+              "variable": [],
+              "raw": "{{base_url}}/check/batch"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "description": {
+                  "content": "Added as a part of security scheme: bearer",
+                  "type": "text/plain"
+                },
+                "key": "Authorization",
+                "value": "Bearer <token>"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ips\": [\n    \"8.8.8.8\",\n    \"1.1.1.1\"\n  ],\n  \"strictness\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "status": "Unprocessable Entity (WebDAV) (RFC 4918)",
+          "code": 422,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": false,\n  \"message\": \"<string>\"\n}",
+          "cookie": [],
+          "_postman_previewlanguage": "json"
+        },
+        {
+          "id": "1f771969-9cda-4513-84eb-c78f096284f4",
+          "name": "Rate limit exceeded",
+          "originalRequest": {
+            "url": {
+              "path": [
+                "check",
+                "batch"
+              ],
+              "host": [
+                "{{base_url}}"
+              ],
+              "query": [],
+              "variable": [],
+              "raw": "{{base_url}}/check/batch"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "description": {
+                  "content": "Added as a part of security scheme: bearer",
+                  "type": "text/plain"
+                },
+                "key": "Authorization",
+                "value": "Bearer <token>"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ips\": [\n    \"8.8.8.8\",\n    \"1.1.1.1\"\n  ],\n  \"strictness\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "status": "Too Many Requests",
+          "code": 429,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": false,\n  \"message\": \"<string>\"\n}",
+          "cookie": [],
+          "_postman_previewlanguage": "json"
+        }
+      ],
+      "event": [],
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      }
+    },
+    {
+      "id": "f3368ac4-d243-4d87-bd11-6a7047983646",
+      "name": "Score up to 100 emails in one request",
+      "request": {
+        "name": "Score up to 100 emails in one request",
+        "description": {},
+        "url": {
+          "path": [
+            "check",
+            "email",
+            "batch"
+          ],
+          "host": [
+            "{{base_url}}"
+          ],
+          "query": [],
+          "variable": [],
+          "raw": "{{base_url}}/check/email/batch"
+        },
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "method": "POST",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"emails\": [\n    \"user@example.com\",\n    \"test@example.org\"\n  ]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{api_key}}"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "id": "4df28853-8812-4f6f-96a0-9dc6f5426a79",
+          "name": "Per-email results",
+          "originalRequest": {
+            "url": {
+              "path": [
+                "check",
+                "email",
+                "batch"
+              ],
+              "host": [
+                "{{base_url}}"
+              ],
+              "query": [],
+              "variable": [],
+              "raw": "{{base_url}}/check/email/batch"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "description": {
+                  "content": "Added as a part of security scheme: bearer",
+                  "type": "text/plain"
+                },
+                "key": "Authorization",
+                "value": "Bearer <token>"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"emails\": [\n    \"user@example.com\",\n    \"test@example.org\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": \"<boolean>\",\n  \"results\": [\n    {\n      \"email\": \"<string>\",\n      \"success\": \"<boolean>\",\n      \"data\": {\n        \"valid\": \"<boolean>\",\n        \"fraud_score\": \"<integer>\",\n        \"disposable\": \"<boolean>\",\n        \"deliverability\": \"<string>\",\n        \"smtp_score\": \"<integer>\",\n        \"overall_score\": \"<integer>\",\n        \"catch_all\": \"<boolean>\",\n        \"generic\": \"<boolean>\",\n        \"common\": \"<boolean>\",\n        \"dns_valid\": \"<boolean>\",\n        \"honeypot\": \"<boolean>\",\n        \"frequent_complainer\": \"<boolean>\",\n        \"suspect\": \"<boolean>\",\n        \"recent_abuse\": \"<boolean>\",\n        \"leaked\": \"<boolean>\",\n        \"spam_trap_score\": \"<string>\",\n        \"risky_tld\": \"<boolean>\",\n        \"spf_record\": \"<boolean>\",\n        \"dmarc_record\": \"<boolean>\",\n        \"first_seen\": \"<string,null>\",\n        \"domain_age\": \"<string,null>\",\n        \"result_type\": \"<string>\",\n        \"sanitized_email\": \"<string>\"\n      },\n      \"error\": \"insufficient_credits\"\n    },\n    {\n      \"email\": \"<string>\",\n      \"success\": \"<boolean>\",\n      \"data\": {\n        \"valid\": \"<boolean>\",\n        \"fraud_score\": \"<integer>\",\n        \"disposable\": \"<boolean>\",\n        \"deliverability\": \"<string>\",\n        \"smtp_score\": \"<integer>\",\n        \"overall_score\": \"<integer>\",\n        \"catch_all\": \"<boolean>\",\n        \"generic\": \"<boolean>\",\n        \"common\": \"<boolean>\",\n        \"dns_valid\": \"<boolean>\",\n        \"honeypot\": \"<boolean>\",\n        \"frequent_complainer\": \"<boolean>\",\n        \"suspect\": \"<boolean>\",\n        \"recent_abuse\": \"<boolean>\",\n        \"leaked\": \"<boolean>\",\n        \"spam_trap_score\": \"<string>\",\n        \"risky_tld\": \"<boolean>\",\n        \"spf_record\": \"<boolean>\",\n        \"dmarc_record\": \"<boolean>\",\n        \"first_seen\": \"<string,null>\",\n        \"domain_age\": \"<string,null>\",\n        \"result_type\": \"<string>\",\n        \"sanitized_email\": \"<string>\"\n      },\n      \"error\": \"upstream_failed\"\n    }\n  ],\n  \"credits_remaining\": \"<integer>\"\n}",
+          "cookie": [],
+          "_postman_previewlanguage": "json"
+        },
+        {
+          "id": "b8dad8a0-5458-4e13-a53d-56b9bc067b05",
+          "name": "Invalid or missing API token",
+          "originalRequest": {
+            "url": {
+              "path": [
+                "check",
+                "email",
+                "batch"
+              ],
+              "host": [
+                "{{base_url}}"
+              ],
+              "query": [],
+              "variable": [],
+              "raw": "{{base_url}}/check/email/batch"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "description": {
+                  "content": "Added as a part of security scheme: bearer",
+                  "type": "text/plain"
+                },
+                "key": "Authorization",
+                "value": "Bearer <token>"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"emails\": [\n    \"user@example.com\",\n    \"test@example.org\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "status": "Unauthorized",
+          "code": 401,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": false,\n  \"message\": \"<string>\"\n}",
+          "cookie": [],
+          "_postman_previewlanguage": "json"
+        },
+        {
+          "id": "873e75c2-5b06-4e09-a618-49b20f235667",
+          "name": "Insufficient credits (balance was zero)",
+          "originalRequest": {
+            "url": {
+              "path": [
+                "check",
+                "email",
+                "batch"
+              ],
+              "host": [
+                "{{base_url}}"
+              ],
+              "query": [],
+              "variable": [],
+              "raw": "{{base_url}}/check/email/batch"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "description": {
+                  "content": "Added as a part of security scheme: bearer",
+                  "type": "text/plain"
+                },
+                "key": "Authorization",
+                "value": "Bearer <token>"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"emails\": [\n    \"user@example.com\",\n    \"test@example.org\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "status": "Payment Required",
+          "code": 402,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": false,\n  \"message\": \"<string>\"\n}",
+          "cookie": [],
+          "_postman_previewlanguage": "json"
+        },
+        {
+          "id": "56dfc3af-6578-4705-9558-c52344779cb6",
+          "name": "Invalid envelope",
+          "originalRequest": {
+            "url": {
+              "path": [
+                "check",
+                "email",
+                "batch"
+              ],
+              "host": [
+                "{{base_url}}"
+              ],
+              "query": [],
+              "variable": [],
+              "raw": "{{base_url}}/check/email/batch"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "description": {
+                  "content": "Added as a part of security scheme: bearer",
+                  "type": "text/plain"
+                },
+                "key": "Authorization",
+                "value": "Bearer <token>"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"emails\": [\n    \"user@example.com\",\n    \"test@example.org\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "status": "Unprocessable Entity (WebDAV) (RFC 4918)",
+          "code": 422,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": false,\n  \"message\": \"<string>\"\n}",
+          "cookie": [],
+          "_postman_previewlanguage": "json"
+        },
+        {
+          "id": "cc86fcf6-61c4-469b-bf15-4f961fd455a4",
+          "name": "Rate limit exceeded",
+          "originalRequest": {
+            "url": {
+              "path": [
+                "check",
+                "email",
+                "batch"
+              ],
+              "host": [
+                "{{base_url}}"
+              ],
+              "query": [],
+              "variable": [],
+              "raw": "{{base_url}}/check/email/batch"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "description": {
+                  "content": "Added as a part of security scheme: bearer",
+                  "type": "text/plain"
+                },
+                "key": "Authorization",
+                "value": "Bearer <token>"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"emails\": [\n    \"user@example.com\",\n    \"test@example.org\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "status": "Too Many Requests",
+          "code": 429,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": false,\n  \"message\": \"<string>\"\n}",
+          "cookie": [],
+          "_postman_previewlanguage": "json"
+        }
+      ],
+      "event": [],
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      }
+    },
+    {
+      "id": "ae89dfbf-6042-4438-9c75-f8953e950cd5",
+      "name": "Score up to 100 phone numbers in one request",
+      "request": {
+        "name": "Score up to 100 phone numbers in one request",
+        "description": {},
+        "url": {
+          "path": [
+            "check",
+            "phone",
+            "batch"
+          ],
+          "host": [
+            "{{base_url}}"
+          ],
+          "query": [],
+          "variable": [],
+          "raw": "{{base_url}}/check/phone/batch"
+        },
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "method": "POST",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"phones\": [\n    \"18176791808\",\n    \"14155552671\"\n  ],\n  \"country\": \"US\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{api_key}}"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "id": "b3ea3f8a-600c-464e-a77c-7c10c6a4074e",
+          "name": "Per-phone results",
+          "originalRequest": {
+            "url": {
+              "path": [
+                "check",
+                "phone",
+                "batch"
+              ],
+              "host": [
+                "{{base_url}}"
+              ],
+              "query": [],
+              "variable": [],
+              "raw": "{{base_url}}/check/phone/batch"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "description": {
+                  "content": "Added as a part of security scheme: bearer",
+                  "type": "text/plain"
+                },
+                "key": "Authorization",
+                "value": "Bearer <token>"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phones\": [\n    \"18176791808\",\n    \"14155552671\"\n  ],\n  \"country\": \"US\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": \"<boolean>\",\n  \"results\": [\n    {\n      \"phone\": \"<string>\",\n      \"success\": \"<boolean>\",\n      \"data\": {\n        \"valid\": \"<boolean>\",\n        \"fraud_score\": \"<integer>\",\n        \"recent_abuse\": \"<boolean>\",\n        \"VOIP\": \"<boolean>\",\n        \"prepaid\": \"<boolean>\",\n        \"risky\": \"<boolean>\",\n        \"active\": \"<boolean>\",\n        \"carrier\": \"<string>\",\n        \"line_type\": \"<string>\",\n        \"country\": \"<string>\",\n        \"region\": \"<string>\",\n        \"city\": \"<string>\",\n        \"timezone\": \"<string>\",\n        \"zip_code\": \"<string>\",\n        \"dialing_code\": \"<integer>\",\n        \"do_not_call\": \"<boolean>\",\n        \"leaked\": \"<boolean>\",\n        \"spammer\": \"<boolean>\",\n        \"active_status\": \"<string>\",\n        \"formatted\": \"<string>\",\n        \"local_format\": \"<string>\"\n      },\n      \"error\": null\n    },\n    {\n      \"phone\": \"<string>\",\n      \"success\": \"<boolean>\",\n      \"data\": {\n        \"valid\": \"<boolean>\",\n        \"fraud_score\": \"<integer>\",\n        \"recent_abuse\": \"<boolean>\",\n        \"VOIP\": \"<boolean>\",\n        \"prepaid\": \"<boolean>\",\n        \"risky\": \"<boolean>\",\n        \"active\": \"<boolean>\",\n        \"carrier\": \"<string>\",\n        \"line_type\": \"<string>\",\n        \"country\": \"<string>\",\n        \"region\": \"<string>\",\n        \"city\": \"<string>\",\n        \"timezone\": \"<string>\",\n        \"zip_code\": \"<string>\",\n        \"dialing_code\": \"<integer>\",\n        \"do_not_call\": \"<boolean>\",\n        \"leaked\": \"<boolean>\",\n        \"spammer\": \"<boolean>\",\n        \"active_status\": \"<string>\",\n        \"formatted\": \"<string>\",\n        \"local_format\": \"<string>\"\n      },\n      \"error\": \"upstream_failed\"\n    }\n  ],\n  \"credits_remaining\": \"<integer>\"\n}",
+          "cookie": [],
+          "_postman_previewlanguage": "json"
+        },
+        {
+          "id": "bfed0686-695a-421e-b5f0-36535334e592",
+          "name": "Invalid or missing API token",
+          "originalRequest": {
+            "url": {
+              "path": [
+                "check",
+                "phone",
+                "batch"
+              ],
+              "host": [
+                "{{base_url}}"
+              ],
+              "query": [],
+              "variable": [],
+              "raw": "{{base_url}}/check/phone/batch"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "description": {
+                  "content": "Added as a part of security scheme: bearer",
+                  "type": "text/plain"
+                },
+                "key": "Authorization",
+                "value": "Bearer <token>"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phones\": [\n    \"18176791808\",\n    \"14155552671\"\n  ],\n  \"country\": \"US\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "status": "Unauthorized",
+          "code": 401,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": false,\n  \"message\": \"<string>\"\n}",
+          "cookie": [],
+          "_postman_previewlanguage": "json"
+        },
+        {
+          "id": "a18d3273-7a9f-404c-b76a-9370693357e1",
+          "name": "Insufficient credits (balance was zero)",
+          "originalRequest": {
+            "url": {
+              "path": [
+                "check",
+                "phone",
+                "batch"
+              ],
+              "host": [
+                "{{base_url}}"
+              ],
+              "query": [],
+              "variable": [],
+              "raw": "{{base_url}}/check/phone/batch"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "description": {
+                  "content": "Added as a part of security scheme: bearer",
+                  "type": "text/plain"
+                },
+                "key": "Authorization",
+                "value": "Bearer <token>"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phones\": [\n    \"18176791808\",\n    \"14155552671\"\n  ],\n  \"country\": \"US\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "status": "Payment Required",
+          "code": 402,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": false,\n  \"message\": \"<string>\"\n}",
+          "cookie": [],
+          "_postman_previewlanguage": "json"
+        },
+        {
+          "id": "f585f743-cb1b-42a5-a6bb-c5dba0a11842",
+          "name": "Invalid envelope",
+          "originalRequest": {
+            "url": {
+              "path": [
+                "check",
+                "phone",
+                "batch"
+              ],
+              "host": [
+                "{{base_url}}"
+              ],
+              "query": [],
+              "variable": [],
+              "raw": "{{base_url}}/check/phone/batch"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "description": {
+                  "content": "Added as a part of security scheme: bearer",
+                  "type": "text/plain"
+                },
+                "key": "Authorization",
+                "value": "Bearer <token>"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phones\": [\n    \"18176791808\",\n    \"14155552671\"\n  ],\n  \"country\": \"US\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "status": "Unprocessable Entity (WebDAV) (RFC 4918)",
+          "code": 422,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": false,\n  \"message\": \"<string>\"\n}",
+          "cookie": [],
+          "_postman_previewlanguage": "json"
+        },
+        {
+          "id": "6f712fdd-2b2f-4e7e-9014-d7ebd42d9d0e",
+          "name": "Rate limit exceeded",
+          "originalRequest": {
+            "url": {
+              "path": [
+                "check",
+                "phone",
+                "batch"
+              ],
+              "host": [
+                "{{base_url}}"
+              ],
+              "query": [],
+              "variable": [],
+              "raw": "{{base_url}}/check/phone/batch"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "description": {
+                  "content": "Added as a part of security scheme: bearer",
+                  "type": "text/plain"
+                },
+                "key": "Authorization",
+                "value": "Bearer <token>"
+              }
+            ],
+            "method": "POST",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phones\": [\n    \"18176791808\",\n    \"14155552671\"\n  ],\n  \"country\": \"US\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "status": "Too Many Requests",
+          "code": 429,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": false,\n  \"message\": \"<string>\"\n}",
+          "cookie": [],
+          "_postman_previewlanguage": "json"
+        }
+      ],
+      "event": [],
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      }
+    },
+    {
+      "id": "215a84bf-4e69-4f2b-b2cd-3e53fabe8710",
+      "name": "Return the current credit balance",
+      "request": {
+        "name": "Return the current credit balance (free, does not consume a credit)",
+        "description": {},
+        "url": {
+          "path": [
+            "balance"
+          ],
+          "host": [
+            "{{base_url}}"
+          ],
+          "query": [],
+          "variable": [],
+          "raw": "{{base_url}}/balance"
+        },
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "method": "GET",
+        "body": {},
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{api_key}}"
+            }
+          ]
+        }
+      },
+      "response": [
+        {
+          "id": "b4ed33fa-eeb8-4d98-92c6-ff357707352c",
+          "name": "Current balance",
+          "originalRequest": {
+            "url": {
+              "path": [
+                "balance"
+              ],
+              "host": [
+                "{{base_url}}"
+              ],
+              "query": [],
+              "variable": [],
+              "raw": "{{base_url}}/balance"
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "description": {
+                  "content": "Added as a part of security scheme: bearer",
+                  "type": "text/plain"
+                },
+                "key": "Authorization",
+                "value": "Bearer <token>"
+              }
+            ],
+            "method": "GET",
+            "body": {}
+          },
+          "status": "OK",
+          "code": 200,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": \"<boolean>\",\n  \"credits_remaining\": \"<integer>\"\n}",
+          "cookie": [],
+          "_postman_previewlanguage": "json"
+        },
+        {
+          "id": "5165fa2a-9d14-4ff5-b900-a8e0ecac4b2b",
+          "name": "Missing or invalid API token",
+          "originalRequest": {
+            "url": {
+              "path": [
+                "balance"
+              ],
+              "host": [
+                "{{base_url}}"
+              ],
+              "query": [],
+              "variable": [],
+              "raw": "{{base_url}}/balance"
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "description": {
+                  "content": "Added as a part of security scheme: bearer",
+                  "type": "text/plain"
+                },
+                "key": "Authorization",
+                "value": "Bearer <token>"
+              }
+            ],
+            "method": "GET",
+            "body": {}
+          },
+          "status": "Unauthorized",
+          "code": 401,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": false,\n  \"message\": \"<string>\"\n}",
+          "cookie": [],
+          "_postman_previewlanguage": "json"
+        },
+        {
+          "id": "fc0f64ed-af3b-4a86-91d3-e73a23c17c5f",
+          "name": "Rate limit exceeded",
+          "originalRequest": {
+            "url": {
+              "path": [
+                "balance"
+              ],
+              "host": [
+                "{{base_url}}"
+              ],
+              "query": [],
+              "variable": [],
+              "raw": "{{base_url}}/balance"
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "description": {
+                  "content": "Added as a part of security scheme: bearer",
+                  "type": "text/plain"
+                },
+                "key": "Authorization",
+                "value": "Bearer <token>"
+              }
+            ],
+            "method": "GET",
+            "body": {}
+          },
+          "status": "Too Many Requests",
+          "code": 429,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": false,\n  \"message\": \"<string>\"\n}",
+          "cookie": [],
+          "_postman_previewlanguage": "json"
+        }
+      ],
+      "event": [],
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      }
+    },
+    {
+      "id": "7ce25da2-9866-48ec-9958-274cdcff2c8c",
+      "name": "Return the caller's IP",
+      "request": {
+        "name": "Return the caller's IP (free, no auth)",
+        "description": {},
+        "url": {
+          "path": [
+            "my-ip"
+          ],
+          "host": [
+            "{{base_url}}"
+          ],
+          "query": [],
+          "variable": [],
+          "raw": "{{base_url}}/my-ip"
+        },
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "method": "GET",
+        "body": {},
+        "auth": {
+          "type": "noauth"
+        }
+      },
+      "response": [
+        {
+          "id": "8f340d03-f086-41cc-9be2-3227c16b6234",
+          "name": "Caller IP",
+          "originalRequest": {
+            "url": {
+              "path": [
+                "my-ip"
+              ],
+              "host": [
+                "{{base_url}}"
+              ],
+              "query": [],
+              "variable": [],
+              "raw": "{{base_url}}/my-ip"
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "description": {
+                  "content": "Added as a part of security scheme: bearer",
+                  "type": "text/plain"
+                },
+                "key": "Authorization",
+                "value": "Bearer <token>"
+              }
+            ],
+            "method": "GET",
+            "body": {}
+          },
+          "status": "OK",
+          "code": 200,
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": \"<boolean>\",\n  \"ip\": \"<string>\"\n}",
+          "cookie": [],
+          "_postman_previewlanguage": "json"
+        }
+      ],
+      "event": [],
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      }
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{api_key}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://fraudnova.com/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "api_key",
+      "value": "",
+      "type": "secret"
+    }
+  ],
+  "info": {
+    "name": "FraudNova API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Real-time fraud scoring for IP addresses, email addresses, and phone numbers. Set the collection variable `api_key` to your FraudNova API key (fn_...). 1 credit per check; /balance and /my-ip are free."
+  }
+}
