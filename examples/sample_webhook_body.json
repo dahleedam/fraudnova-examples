@@ -1,0 +1,5 @@
+{
+  "event": "balance.low",
+  "data": { "user_id": 42, "balance": 80, "threshold": 100 },
+  "occurred_at": "2026-06-27T14:03:11+00:00"
+}
