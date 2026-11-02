@@ -3,16 +3,62 @@
   "nodes": [
     {
       "parameters": {
-        "content": "## FraudNova setup (4 steps)\n\n1. **Credential.** Create a *Header Auth* credential named `FraudNova API`: header name `Authorization`, value `Bearer fn_...`. **The value must be `Bearer ` followed by a space and your key.** Get a key at https://fraudnova.com/dashboard/api-keys, then select the credential in every *Check* node.\n\n2. **Settings.** Open the **Settings** node and set `risk_threshold` (75 = top of the suspicious band, 85 = only the worst).\n\n3. **Connect.** Point your own site or any tool that lets you set the JSON body and read the reply (a custom form handler, another n8n workflow, a Make or Zapier webhook step) at the Webhook node's production URL. POST `{ \"email\", \"ip\", \"phone\"?, \"country\"? }` (`phone` and `country` are accepted but this template does not check them). If `ip` is missing the IP check returns an error and is treated as not checked, so the decision rests on the email alone. A failed check gives `scores: { email: null, ip: null }`.\n\n4. **Cost.** 1 credit per check; a failed or skipped check never marks an item risky.\n\nTemplates and docs: https://github.com/dahleedam/fraudnova-examples/tree/main/examples/n8n",
-        "height": 420,
-        "width": 420
+        "content": "### How it works\nChecks a new lead with FraudNova before you accept it. A POST to the webhook carries the visitor's email and IP. The workflow checks the email, then the IP, and replies `accepted: true` or `accepted: false` with a reason and both scores. A lead is rejected for a disposable email, a score at or above your threshold, or a proxy, VPN or Tor IP. It helps marketers and developers keep fake leads out of a CRM or ad network.\nLimits: it works with your own site or any tool that lets you set the JSON body and read the reply. A missing `ip` means the decision rests on the email alone. A failed check never rejects a lead.\n\n### Setup\n1. Create a Header Auth credential named `FraudNova API`: header `Authorization`, value **`Bearer ` + space + your key** (key at https://fraudnova.com/dashboard/api-keys). New accounts get 25 free credits; each check costs 1 credit.\n2. Open **Settings** and set `risk_threshold` (default 75).\n3. POST `{ \"email\", \"ip\" }` as JSON to the Webhook's production URL.\n\n### Customization\nUse 85 to reject only the worst leads, or 60 for strict offers. To add the phone check, duplicate *Check email*, use the `/check/phone` URL and a `phone` query parameter. Send accepted leads to a CRM or Airtable node after *Respond accepted*.\n\nTemplates and docs: https://github.com/dahleedam/fraudnova-examples/tree/main/examples/n8n",
+        "height": 560,
+        "width": 460,
+        "color": 1
       },
-      "name": "Setup notes",
+      "name": "Overview",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        -760,
-        -340
+        -880,
+        -300
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Receive the lead\nThe webhook receives the lead.\nSettings holds the threshold.",
+        "height": 260,
+        "width": 420,
+        "color": 7
+      },
+      "name": "Section: Receive the lead",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -340,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Check with FraudNova\nOne credit per check.\nA failed check counts as not checked.",
+        "height": 260,
+        "width": 420,
+        "color": 7
+      },
+      "name": "Section: Check with FraudNova",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        140,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Decide and reply\nBoth outcomes reply, so the caller never hangs.",
+        "height": 460,
+        "width": 460,
+        "color": 7
+      },
+      "name": "Section: Decide and reply",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        620,
+        -180
       ]
     },
     {
