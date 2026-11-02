@@ -3,8 +3,8 @@
   "nodes": [
     {
       "parameters": {
-        "content": "## FraudNova setup (4 steps)\n1. **Credential.** Create a *Header Auth* credential named `FraudNova API`: header name `Authorization`, value `Bearer fn_...` (get a key at https://fraudnova.com/dashboard/api-keys). Open each *Check* node and select it.\n2. **Threshold.** Open the **Settings** node and set `risk_threshold` (75 = top of the suspicious band, 85 = only the worst).\n3. **WooCommerce + Telegram.**\n4. **Cost.** 1 credit per check, whichever type. In the Telegram node pick your bot credential and set `chatId` (bot from @BotFather; chat id from @userinfobot). Swap the last node for Slack, Discord or Email to alert elsewhere. Orders with no usable phone, email or IP are checked on what is present; non-risky orders end the run.\n\nTemplates and docs: https://github.com/dahleedam/fraudnova-examples/tree/main/examples/n8n",
-        "height": 360,
+        "content": "## FraudNova setup (4 steps)\n\n1. **Credential.** Create a *Header Auth* credential named `FraudNova API`: header name `Authorization`, value `Bearer fn_...`. **The value must be `Bearer ` followed by a space and your key.** Get a key at https://fraudnova.com/dashboard/api-keys, then select the credential in every *Check* node.\n\n2. **Settings.** Open the **Settings** node and set `risk_threshold` (75 = top of the suspicious band, 85 = only the worst).\n\n3. **Connect.** Select your WooCommerce credential on the trigger. In the Telegram node pick your bot credential and set `chatId` (bot from @BotFather, chat id from @userinfobot). To alert elsewhere, replace the Telegram node with Slack, Discord or Email.\n\n4. **Cost.** 1 credit per check; a failed or skipped check never marks an item risky.\n\nTemplates and docs: https://github.com/dahleedam/fraudnova-examples/tree/main/examples/n8n",
+        "height": 420,
         "width": 420
       },
       "name": "Setup notes",
@@ -12,7 +12,7 @@
       "typeVersion": 1,
       "position": [
         -760,
-        -300
+        -340
       ]
     },
     {
@@ -75,7 +75,7 @@
           ]
         },
         "options": {
-          "timeout": 15000
+          "timeout": 60000
         }
       },
       "name": "Check phone",
@@ -108,7 +108,7 @@
           ]
         },
         "options": {
-          "timeout": 15000
+          "timeout": 60000
         }
       },
       "name": "Check email",
@@ -141,7 +141,7 @@
           ]
         },
         "options": {
-          "timeout": 15000
+          "timeout": 60000
         }
       },
       "name": "Check IP",

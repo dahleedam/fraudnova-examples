@@ -4,9 +4,9 @@ Three importable [n8n](https://n8n.io) workflows that add FraudNova fraud checks
 
 | File | Trigger | What it checks | Result |
 | --- | --- | --- | --- |
-| [`lead-gate-webhook.json`](lead-gate-webhook.json) | Webhook (`POST /webhook/fraudnova-lead-gate`) with `email` and `ip` in the JSON body | Email (`/check/email`) and IP (`/check`) | Responds `{"accepted": false, "reason": "...", "scores": {...}}` when the email is disposable, either score is at or above the threshold, or the IP is a proxy, VPN or Tor exit; otherwise `{"accepted": true, "scores": {...}}`. Works with any form tool that can POST a webhook (Tally, Typeform, WPForms, Elementor, your own site). |
+| [`lead-gate-webhook.json`](lead-gate-webhook.json) | Webhook (`POST /webhook/fraudnova-lead-gate`) with `email` and `ip` in the JSON body | Email (`/check/email`) and IP (`/check`) | Responds `{"accepted": false, "reason": "...", "scores": {...}}` when the email is disposable, either score is at or above the threshold, or the IP is a proxy, VPN or Tor exit; otherwise `{"accepted": true, "scores": {...}}`. Works with your own site or any tool that lets you set the JSON body and read the reply (a custom form handler, another n8n workflow, a Make or Zapier webhook step). Form builders that post a fixed payload without the visitor's IP and ignore the response (for example Tally or Typeform) cannot drive it as-is. If `ip` is missing the IP check errors and is treated as not checked, so the decision rests on the email alone. |
 | [`woocommerce-order-risk-telegram.json`](woocommerce-order-risk-telegram.json) | WooCommerce Trigger, `order.created` | Billing phone and country (`/check/phone`), billing email (`/check/email`), customer IP (`/check`) | Sends a Telegram message with the order number, total, customer name, the three scores and the flags when any score is at or above the threshold, the phone is VOIP or risky, the email is disposable, or the IP is a proxy, VPN or Tor exit. Other orders end the run. |
-| [`sheet-phone-enrichment.json`](sheet-phone-enrichment.json) | Google Sheets Trigger, row added | Phone from the `phone` column and an optional `country` column (`/check/phone`) | Writes `valid`, `line_type`, `carrier`, `fraud_score`, `risky`, `checked_at` and `status` back to the same row. A failed check writes `status` = `error`. |
+| [`sheet-phone-enrichment.json`](sheet-phone-enrichment.json) | Google Sheets Trigger, row added | Phone from the `phone` column and an optional `country` column (`/check/phone`) | Writes `valid`, `line_type`, `carrier`, `fraud_score`, `risky`, `checked_at` and `status` back to the row, matched on `phone` (a duplicate phone number updates the first matching row). A failed check writes `status` = `error`. |
 
 ## Import a template
 
@@ -16,6 +16,10 @@ Three importable [n8n](https://n8n.io) workflows that add FraudNova fraud checks
 4. Connect the trigger and destination credentials (Telegram, WooCommerce or Google Sheets), then activate the workflow.
 
 Each workflow also carries a sticky note with these four steps.
+
+The credential value must be `Bearer ` followed by a space and your key; pasting only `fn_...` fails with a 401.
+
+**Sheet template:** the sheet needs the header columns `phone`, optional `country`, `valid`, `line_type`, `carrier`, `fraud_score`, `risky`, `checked_at` and `status`. Format the `phone` column as plain text (or include `+` and the country code) so leading zeros are not lost.
 
 ## The credential
 
@@ -32,15 +36,73 @@ The lead gate and the WooCommerce workflow have a **Settings** node with `risk_t
 
 ## What a failed check does
 
-Every HTTP Request node has *Continue on fail* on and every decision first checks `success === true`. If a check fails (no credits left (402), rate limit (429), bad input (422) or an upstream error (502)), it is treated as "not checked", never as risky: the lead gate accepts the lead with `scores: null`, the WooCommerce workflow does not alert on what it could not check, and the sheet row is marked `error`.
+Every HTTP Request node has *Continue on fail* on and every decision first checks `success === true`. If a check fails (no credits left (402), rate limit (429), bad input (422) or an upstream error (502)), it is treated as "not checked", never as risky: the lead gate accepts the lead with `scores: { "email": null, "ip": null }`, the WooCommerce workflow does not alert on what it could not check, and the sheet row is marked `error`.
 
 ## Cost
 
-One credit per check, whichever type. The lead gate uses 2 credits per lead, the WooCommerce workflow 3 per order, the sheet workflow 1 per row. Each workflow checks once per item and never retries. Rate limits and the per-account concurrency cap are in the [docs](https://fraudnova.com/docs).
+One credit per check, whichever type. The lead gate uses 2 credits per lead, the WooCommerce workflow 3 per order, the sheet workflow 1 per row. Each workflow checks once per item and never retries. HTTP timeouts are 15 seconds in the lead gate, because a form caller cannot wait a minute, and 60 seconds in the WooCommerce and sheet workflows, because the server can take up to about a minute to fail over between keys and bills the check even if the client gives up. A timed-out check is treated as not checked. Rate limits and the per-account concurrency cap are in the [docs](https://fraudnova.com/docs).
 
 ## Send the alert somewhere else
 
 Replace the last node. In the WooCommerce workflow delete **Telegram alert** and connect the `true` output of **Risky?** to a Slack, Discord, Email or Microsoft Teams node; the same expressions (`$('Check phone').item.json.data.fraud_score` and friends) are available in its message field. In the lead gate, add your CRM or Airtable node after **Respond accepted** to store accepted leads. In the sheet workflow, swap Google Sheets for Airtable or a database node.
+
+## Template descriptions for n8n.io
+
+Paste-ready descriptions for the Creator Portal, one per template.
+
+### Lead gate (webhook)
+
+```markdown
+# Reject fake leads with FraudNova: email and IP fraud check for any webhook
+
+## What it does
+Receives a JSON POST with an email address and a visitor IP, checks both with the FraudNova API, and replies with an accept or reject decision. A lead is rejected when the email is disposable, either fraud score reaches your threshold, or the IP is a proxy, VPN or Tor exit. Both outcomes get a reply, so the caller never hangs. A failed check never rejects a lead: it is accepted with null scores.
+
+## Setup
+1. Create a Header Auth credential named `FraudNova API` with header `Authorization` and value `Bearer ` plus your key.
+2. Set `risk_threshold` in the Settings node (default 75).
+3. POST `{ "email", "ip" }` to the webhook URL from your site or another workflow.
+4. Each lead uses 2 credits.
+
+## Who it is for
+Marketers, affiliates and developers who collect leads through their own form handler and want to filter disposable emails and proxy traffic before the lead reaches a CRM or a network.
+```
+
+### WooCommerce order risk alerts on Telegram
+
+```markdown
+# Get a Telegram alert for risky WooCommerce orders with FraudNova
+
+## What it does
+Runs when WooCommerce creates an order and checks the billing phone, the billing email and the customer IP with the FraudNova API. If any score reaches your threshold, the phone is VOIP or risky, the email is disposable, or the IP is a proxy, VPN or Tor exit, it sends a Telegram message with the order number, total, customer name, the three scores and the flags. Other orders end quietly, and a failed check never triggers an alert.
+
+## Setup
+1. Create a Header Auth credential named `FraudNova API` with header `Authorization` and value `Bearer ` plus your key.
+2. Set `risk_threshold` in the Settings node (default 75).
+3. Connect WooCommerce and a Telegram bot, and set the chat id.
+4. Each order uses 3 credits.
+
+## Who it is for
+Store owners who want to spot fraudulent or high-risk orders before shipping, without reviewing every order by hand.
+```
+
+### Google Sheets phone number enrichment
+
+```markdown
+# Enrich a Google Sheet of phone numbers with FraudNova line type and risk
+
+## What it does
+Watches a Google Sheet for new rows, checks the phone number in each row with the FraudNova API, and writes the result back to the same row: validity, line type, carrier, fraud score, a risky flag, a timestamp and a status. If a check fails, the row gets the status `error` and nothing else is changed.
+
+## Setup
+1. Create a Header Auth credential named `FraudNova API` with header `Authorization` and value `Bearer ` plus your key.
+2. Add the header columns `phone`, `country` (optional), `valid`, `line_type`, `carrier`, `fraud_score`, `risky`, `checked_at` and `status`, and format `phone` as plain text.
+3. Connect Google Sheets and pick the document and sheet in both Google Sheets nodes.
+4. Each row uses 1 credit. Rows are matched on `phone`.
+
+## Who it is for
+Anyone cleaning a lead or contact list who wants to know which numbers are real, mobile or VOIP before running an SMS or call campaign.
+```
 
 ## Check the files
 

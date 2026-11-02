@@ -3,8 +3,8 @@
   "nodes": [
     {
       "parameters": {
-        "content": "## FraudNova setup (4 steps)\n1. **Credential.** Create a *Header Auth* credential named `FraudNova API`: header name `Authorization`, value `Bearer fn_...` (get a key at https://fraudnova.com/dashboard/api-keys). Open each *Check* node and select it.\n2. **Threshold.** Open the **Settings** node and set `risk_threshold` (75 = top of the suspicious band, 85 = only the worst).\n3. **Google Sheets.**\n4. **Cost.** 1 credit per check, whichever type. Your sheet needs a `phone` column (and optionally `country`, a 2-letter code) plus these empty columns: `valid`, `line_type`, `carrier`, `fraud_score`, `risky`, `checked_at`, `status`. In both Google Sheets nodes pick your document and sheet. Set `default_country` in Settings for rows without a country. There is no threshold here: the template only writes results back; a failed check writes `status` = `error`.\n\nTemplates and docs: https://github.com/dahleedam/fraudnova-examples/tree/main/examples/n8n",
-        "height": 360,
+        "content": "## FraudNova setup (4 steps)\n\n1. **Credential.** Create a *Header Auth* credential named `FraudNova API`: header name `Authorization`, value `Bearer fn_...`. **The value must be `Bearer ` followed by a space and your key.** Get a key at https://fraudnova.com/dashboard/api-keys, then select the credential in every *Check* node.\n\n2. **Settings.** Open the **Settings** node and set `default_country` (a 2-letter code such as `US`, used for rows without a `country` value).\n\n3. **Connect.** Select your Google Sheets credential, then pick the same document and sheet in both Google Sheets nodes. Your sheet needs the header columns `phone` (plus optional `country`), `valid`, `line_type`, `carrier`, `fraud_score`, `risky`, `checked_at` and `status`. Format the `phone` column as plain text (or include `+` and the country code) so leading zeros are not lost. Results are written back by matching on `phone`, so a duplicate phone number updates the first matching row.\n\n4. **Cost.** 1 credit per check; a failed or skipped check never marks an item risky. There is no threshold here: a failed check writes `status` = `error`.\n\nTemplates and docs: https://github.com/dahleedam/fraudnova-examples/tree/main/examples/n8n",
+        "height": 480,
         "width": 420
       },
       "name": "Setup notes",
@@ -12,7 +12,7 @@
       "typeVersion": 1,
       "position": [
         -760,
-        -300
+        -340
       ]
     },
     {
@@ -93,7 +93,7 @@
           ]
         },
         "options": {
-          "timeout": 15000
+          "timeout": 60000
         }
       },
       "name": "Check phone",
@@ -126,11 +126,92 @@
         "columns": {
           "mappingMode": "defineBelow",
           "matchingColumns": [
-            "row_number"
+            "phone"
           ],
-          "schema": [],
+          "schema": [
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "valid",
+              "displayName": "valid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "line_type",
+              "displayName": "line_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "carrier",
+              "displayName": "carrier",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "fraud_score",
+              "displayName": "fraud_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "risky",
+              "displayName": "risky",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "checked_at",
+              "displayName": "checked_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            }
+          ],
           "value": {
-            "row_number": "={{ $('Google Sheets Trigger').item.json.row_number }}",
+            "phone": "={{ $('Google Sheets Trigger').item.json.phone }}",
             "valid": "={{ $json.success === true ? $json.data.valid : '' }}",
             "line_type": "={{ $json.success === true ? $json.data.line_type : '' }}",
             "carrier": "={{ $json.success === true ? $json.data.carrier : '' }}",
