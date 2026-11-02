@@ -3,8 +3,8 @@
   "nodes": [
     {
       "parameters": {
-        "content": "## FraudNova setup (4 steps)\n1. **Credential.** Create a *Header Auth* credential named `FraudNova API`: header name `Authorization`, value `Bearer fn_...` (get a key at https://fraudnova.com/dashboard/api-keys). Open each *Check* node and select it.\n2. **Threshold.** Open the **Settings** node and set `risk_threshold` (75 = top of the suspicious band, 85 = only the worst).\n3. **Webhook.**\n4. **Cost.** 1 credit per check, whichever type. Point your form tool (Tally, Typeform, WPForms, Elementor, your own site) at the Webhook node's production URL: POST JSON with `email` and `ip` (`phone` and `country` are accepted but this template does not check them). A failed check never rejects a lead: it is accepted with `scores: null`.\n\nTemplates and docs: https://github.com/dahleedam/fraudnova-examples/tree/main/examples/n8n",
-        "height": 360,
+        "content": "## FraudNova setup (4 steps)\n\n1. **Credential.** Create a *Header Auth* credential named `FraudNova API`: header name `Authorization`, value `Bearer fn_...`. **The value must be `Bearer ` followed by a space and your key.** Get a key at https://fraudnova.com/dashboard/api-keys, then select the credential in every *Check* node.\n\n2. **Settings.** Open the **Settings** node and set `risk_threshold` (75 = top of the suspicious band, 85 = only the worst).\n\n3. **Connect.** Point your own site or any tool that lets you set the JSON body and read the reply (a custom form handler, another n8n workflow, a Make or Zapier webhook step) at the Webhook node's production URL. POST `{ \"email\", \"ip\", \"phone\"?, \"country\"? }` (`phone` and `country` are accepted but this template does not check them). If `ip` is missing the IP check returns an error and is treated as not checked, so the decision rests on the email alone. A failed check gives `scores: { email: null, ip: null }`.\n\n4. **Cost.** 1 credit per check; a failed or skipped check never marks an item risky.\n\nTemplates and docs: https://github.com/dahleedam/fraudnova-examples/tree/main/examples/n8n",
+        "height": 420,
         "width": 420
       },
       "name": "Setup notes",
@@ -12,7 +12,7 @@
       "typeVersion": 1,
       "position": [
         -760,
-        -300
+        -340
       ]
     },
     {
