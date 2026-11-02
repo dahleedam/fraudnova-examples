@@ -1,0 +1,198 @@
+{
+  "name": "FraudNova phone enrichment (Google Sheets)",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## FraudNova setup (4 steps)\n1. **Credential.** Create a *Header Auth* credential named `FraudNova API`: header name `Authorization`, value `Bearer fn_...` (get a key at https://fraudnova.com/dashboard/api-keys). Open each *Check* node and select it.\n2. **Threshold.** Open the **Settings** node and set `risk_threshold` (75 = top of the suspicious band, 85 = only the worst).\n3. **Google Sheets.**\n4. **Cost.** 1 credit per check, whichever type. Your sheet needs a `phone` column (and optionally `country`, a 2-letter code) plus these empty columns: `valid`, `line_type`, `carrier`, `fraud_score`, `risky`, `checked_at`, `status`. In both Google Sheets nodes pick your document and sheet. Set `default_country` in Settings for rows without a country. There is no threshold here: the template only writes results back; a failed check writes `status` = `error`.\n\nTemplates and docs: https://github.com/dahleedam/fraudnova-examples/tree/main/examples/n8n",
+        "height": 360,
+        "width": 420
+      },
+      "name": "Setup notes",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -760,
+        -300
+      ]
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "",
+          "mode": "list"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "",
+          "mode": "list"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "name": "Google Sheets Trigger",
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        -300,
+        0
+      ],
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "name": "Google Sheets Trigger account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "setting-1",
+              "name": "default_country",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "name": "Settings",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -60,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://fraudnova.com/api/v1/check/phone",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "phone",
+              "value": "={{ ($('Google Sheets Trigger').item.json.phone || '').toString().replace(/[^0-9+\\-\\s()]/g, '') }}"
+            },
+            {
+              "name": "country",
+              "value": "={{ ($('Google Sheets Trigger').item.json.country || $('Settings').item.json.default_country || '').toString().trim() }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "name": "Check phone",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        180,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "FraudNova API"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "",
+          "mode": "list"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "",
+          "mode": "list"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [],
+          "value": {
+            "row_number": "={{ $('Google Sheets Trigger').item.json.row_number }}",
+            "valid": "={{ $json.success === true ? $json.data.valid : '' }}",
+            "line_type": "={{ $json.success === true ? $json.data.line_type : '' }}",
+            "carrier": "={{ $json.success === true ? $json.data.carrier : '' }}",
+            "fraud_score": "={{ $json.success === true ? $json.data.fraud_score : '' }}",
+            "risky": "={{ $json.success === true ? $json.data.risky : '' }}",
+            "checked_at": "={{ $now.toISO() }}",
+            "status": "={{ $json.success === true ? 'ok' : 'error' }}"
+          }
+        },
+        "options": {}
+      },
+      "name": "Update row",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        440,
+        0
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "Settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Settings": {
+      "main": [
+        [
+          {
+            "node": "Check phone",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check phone": {
+      "main": [
+        [
+          {
+            "node": "Update row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}
