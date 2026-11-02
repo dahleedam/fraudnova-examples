@@ -1,0 +1,342 @@
+{
+  "name": "FraudNova WooCommerce order risk to Telegram",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## FraudNova setup (4 steps)\n1. **Credential.** Create a *Header Auth* credential named `FraudNova API`: header name `Authorization`, value `Bearer fn_...` (get a key at https://fraudnova.com/dashboard/api-keys). Open each *Check* node and select it.\n2. **Threshold.** Open the **Settings** node and set `risk_threshold` (75 = top of the suspicious band, 85 = only the worst).\n3. **WooCommerce + Telegram.**\n4. **Cost.** 1 credit per check, whichever type. In the Telegram node pick your bot credential and set `chatId` (bot from @BotFather; chat id from @userinfobot). Swap the last node for Slack, Discord or Email to alert elsewhere. Orders with no usable phone, email or IP are checked on what is present; non-risky orders end the run.\n\nTemplates and docs: https://github.com/dahleedam/fraudnova-examples/tree/main/examples/n8n",
+        "height": 360,
+        "width": 420
+      },
+      "name": "Setup notes",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -760,
+        -300
+      ]
+    },
+    {
+      "parameters": {
+        "event": "order.created"
+      },
+      "name": "WooCommerce Trigger",
+      "type": "n8n-nodes-base.wooCommerceTrigger",
+      "typeVersion": 1,
+      "position": [
+        -300,
+        0
+      ],
+      "credentials": {
+        "wooCommerceApi": {
+          "name": "WooCommerce account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "setting-1",
+              "name": "risk_threshold",
+              "value": 75,
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "name": "Settings",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -60,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://fraudnova.com/api/v1/check/phone",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "phone",
+              "value": "={{ ($('WooCommerce Trigger').item.json.billing.phone || '').toString().replace(/[^0-9+\\-\\s()]/g, '') }}"
+            },
+            {
+              "name": "country",
+              "value": "={{ $('WooCommerce Trigger').item.json.billing.country }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "name": "Check phone",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        180,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "FraudNova API"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://fraudnova.com/api/v1/check/email",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "email",
+              "value": "={{ $('WooCommerce Trigger').item.json.billing.email }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "name": "Check email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        420,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "FraudNova API"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://fraudnova.com/api/v1/check",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "ip",
+              "value": "={{ $('WooCommerce Trigger').item.json.customer_ip_address }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "name": "Check IP",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "FraudNova API"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-1",
+              "leftValue": "={{ $('Check phone').item.json.success === true && $('Check phone').item.json.data.fraud_score >= $('Settings').item.json.risk_threshold }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "cond-2",
+              "leftValue": "={{ $('Check email').item.json.success === true && $('Check email').item.json.data.fraud_score >= $('Settings').item.json.risk_threshold }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "cond-3",
+              "leftValue": "={{ $('Check IP').item.json.success === true && $('Check IP').item.json.data.fraud_score >= $('Settings').item.json.risk_threshold }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "cond-4",
+              "leftValue": "={{ $('Check phone').item.json.success === true && ($('Check phone').item.json.data.VOIP === true || $('Check phone').item.json.data.risky === true) }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "cond-5",
+              "leftValue": "={{ $('Check email').item.json.success === true && $('Check email').item.json.data.disposable === true }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "cond-6",
+              "leftValue": "={{ $('Check IP').item.json.success === true && ($('Check IP').item.json.data.proxy === true || $('Check IP').item.json.data.vpn === true || $('Check IP').item.json.data.tor === true) }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "name": "Risky?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        900,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "=Risky WooCommerce order #{{ $('WooCommerce Trigger').item.json.number }}\nTotal: {{ $('WooCommerce Trigger').item.json.total }} {{ $('WooCommerce Trigger').item.json.currency }}\nCustomer: {{ ($('WooCommerce Trigger').item.json.billing.first_name || '').toString().replace(/[<>&]/g, '') }} {{ ($('WooCommerce Trigger').item.json.billing.last_name || '').toString().replace(/[<>&]/g, '') }}\nPhone score: {{ ($('Check phone').item.json.success === true) ? $('Check phone').item.json.data.fraud_score : 'n/a' }}\nEmail score: {{ ($('Check email').item.json.success === true) ? $('Check email').item.json.data.fraud_score : 'n/a' }}\nIP score: {{ ($('Check IP').item.json.success === true) ? $('Check IP').item.json.data.fraud_score : 'n/a' }}\nFlags: {{ [ ($('Check phone').item.json.success === true && $('Check phone').item.json.data.VOIP === true) ? 'VOIP phone' : '', ($('Check phone').item.json.success === true && $('Check phone').item.json.data.risky === true) ? 'risky phone' : '', ($('Check email').item.json.success === true && $('Check email').item.json.data.disposable === true) ? 'disposable email' : '', ($('Check IP').item.json.success === true && $('Check IP').item.json.data.proxy === true) ? 'proxy' : '', ($('Check IP').item.json.success === true && $('Check IP').item.json.data.vpn === true) ? 'VPN' : '', ($('Check IP').item.json.success === true && $('Check IP').item.json.data.tor === true) ? 'Tor' : '' ].filter(f => f).join(', ') || 'none (score only)' }}\nThreshold: {{ $('Settings').item.json.risk_threshold }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "name": "Telegram alert",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1160,
+        -100
+      ],
+      "credentials": {
+        "telegramApi": {
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "WooCommerce Trigger": {
+      "main": [
+        [
+          {
+            "node": "Settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Settings": {
+      "main": [
+        [
+          {
+            "node": "Check phone",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check phone": {
+      "main": [
+        [
+          {
+            "node": "Check email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check email": {
+      "main": [
+        [
+          {
+            "node": "Check IP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check IP": {
+      "main": [
+        [
+          {
+            "node": "Risky?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Risky?": {
+      "main": [
+        [
+          {
+            "node": "Telegram alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

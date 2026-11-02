@@ -1,0 +1,287 @@
+{
+  "name": "FraudNova lead gate (webhook)",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## FraudNova setup (4 steps)\n1. **Credential.** Create a *Header Auth* credential named `FraudNova API`: header name `Authorization`, value `Bearer fn_...` (get a key at https://fraudnova.com/dashboard/api-keys). Open each *Check* node and select it.\n2. **Threshold.** Open the **Settings** node and set `risk_threshold` (75 = top of the suspicious band, 85 = only the worst).\n3. **Webhook.**\n4. **Cost.** 1 credit per check, whichever type. Point your form tool (Tally, Typeform, WPForms, Elementor, your own site) at the Webhook node's production URL: POST JSON with `email` and `ip` (`phone` and `country` are accepted but this template does not check them). A failed check never rejects a lead: it is accepted with `scores: null`.\n\nTemplates and docs: https://github.com/dahleedam/fraudnova-examples/tree/main/examples/n8n",
+        "height": 360,
+        "width": 420
+      },
+      "name": "Setup notes",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -760,
+        -300
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "fraudnova-lead-gate",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -300,
+        0
+      ],
+      "webhookId": "fraudnova-lead-gate"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "setting-1",
+              "name": "risk_threshold",
+              "value": 75,
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "name": "Settings",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -60,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://fraudnova.com/api/v1/check/email",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "email",
+              "value": "={{ $('Webhook').item.json.body.email }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "name": "Check email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        180,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "FraudNova API"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://fraudnova.com/api/v1/check",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "ip",
+              "value": "={{ $('Webhook').item.json.body.ip }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "name": "Check IP",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        420,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "FraudNova API"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-1",
+              "leftValue": "={{ $('Check email').item.json.success === true && $('Check email').item.json.data.disposable === true }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "cond-2",
+              "leftValue": "={{ $('Check email').item.json.success === true && $('Check email').item.json.data.fraud_score >= $('Settings').item.json.risk_threshold }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "cond-3",
+              "leftValue": "={{ $('Check IP').item.json.success === true && $('Check IP').item.json.data.fraud_score >= $('Settings').item.json.risk_threshold }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "cond-4",
+              "leftValue": "={{ $('Check IP').item.json.success === true && ($('Check IP').item.json.data.proxy === true || $('Check IP').item.json.data.vpn === true || $('Check IP').item.json.data.tor === true) }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "name": "Risky?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        660,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { accepted: false, reason: [ ($('Check email').item.json.success === true && $('Check email').item.json.data.disposable === true) ? 'disposable_email' : '', ($('Check email').item.json.success === true && $('Check email').item.json.data.fraud_score >= $('Settings').item.json.risk_threshold) ? 'high_email_score' : '', ($('Check IP').item.json.success === true && $('Check IP').item.json.data.fraud_score >= $('Settings').item.json.risk_threshold) ? 'high_ip_score' : '', ($('Check IP').item.json.success === true && ($('Check IP').item.json.data.proxy === true || $('Check IP').item.json.data.vpn === true || $('Check IP').item.json.data.tor === true)) ? 'proxy_vpn_or_tor' : '' ].filter(r => r).join(', '), scores: { email: ($('Check email').item.json.success === true) ? $('Check email').item.json.data.fraud_score : null, ip: ($('Check IP').item.json.success === true) ? $('Check IP').item.json.data.fraud_score : null } } }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "name": "Respond rejected",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        920,
+        -100
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { accepted: true, scores: { email: ($('Check email').item.json.success === true) ? $('Check email').item.json.data.fraud_score : null, ip: ($('Check IP').item.json.success === true) ? $('Check IP').item.json.data.fraud_score : null } } }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "name": "Respond accepted",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        920,
+        100
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Settings": {
+      "main": [
+        [
+          {
+            "node": "Check email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check email": {
+      "main": [
+        [
+          {
+            "node": "Check IP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check IP": {
+      "main": [
+        [
+          {
+            "node": "Risky?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Risky?": {
+      "main": [
+        [
+          {
+            "node": "Respond rejected",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond accepted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

@@ -136,6 +136,10 @@ php examples/php/check_email.php user@example.com
 php examples/php/batch_ip.php 8.8.8.8 1.1.1.1
 ```
 
+**n8n** (workflow templates, no install step)
+
+Three importable workflows (webhook lead gate, WooCommerce order risk alert on Telegram, Google Sheets phone enrichment) live in [`examples/n8n`](examples/n8n). Import a JSON file into n8n, create one `FraudNova API` Header Auth credential and set one threshold. See [`examples/n8n/README.md`](examples/n8n/README.md).
+
 ## OpenAPI and Postman
 
 - [`openapi.json`](openapi.json) is a pretty-printed copy of the live spec at [fraudnova.com/docs/openapi.json](https://fraudnova.com/docs/openapi.json). Use it to generate a client in another language.
