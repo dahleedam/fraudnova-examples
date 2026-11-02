@@ -3,16 +3,77 @@
   "nodes": [
     {
       "parameters": {
-        "content": "## FraudNova setup (4 steps)\n\n1. **Credential.** Create a *Header Auth* credential named `FraudNova API`: header name `Authorization`, value `Bearer fn_...`. **The value must be `Bearer ` followed by a space and your key.** Get a key at https://fraudnova.com/dashboard/api-keys, then select the credential in every *Check* node.\n\n2. **Settings.** Open the **Settings** node and set `default_country` (a 2-letter code such as `US`, used for rows without a `country` value).\n\n3. **Connect.** Select your Google Sheets credential, then pick the same document and sheet in both Google Sheets nodes. Your sheet needs the header columns `phone` (plus optional `country`), `valid`, `line_type`, `carrier`, `fraud_score`, `risky`, `checked_at` and `status`. Format the `phone` column as plain text (or include `+` and the country code) so leading zeros are not lost. Results are written back by matching on `phone`, so a duplicate phone number updates the first matching row.\n\n4. **Cost.** 1 credit per check; a failed or skipped check never marks an item risky. There is no threshold here: a failed check writes `status` = `error`.\n\nTemplates and docs: https://github.com/dahleedam/fraudnova-examples/tree/main/examples/n8n",
-        "height": 480,
-        "width": 420
+        "content": "### How it works\nEnriches a Google Sheet of phone numbers with FraudNova. When a new row is added, the workflow checks the number in its `phone` column (and the optional `country` column) and writes `valid`, `line_type`, `carrier`, `fraud_score`, `risky`, `checked_at` and `status` back to the row. It helps anyone cleaning a lead or contact list before an SMS or call campaign.\nLimits: rows are matched on `phone`, so a duplicate number updates the first match. The `phone` column must be plain text (or include `+` and the country code) so leading zeros are not lost. A failed check writes `status` = `error`.\n\n### Setup\n1. Create a Header Auth credential named `FraudNova API`: header `Authorization`, value **`Bearer ` + space + your key** (key at https://fraudnova.com/dashboard/api-keys). New accounts get 25 free credits; each check costs 1 credit.\n2. Open **Settings** and set `default_country` (for example `US`) for rows without a `country` value.\n3. Select your Google Sheets credential, and pick the same document and sheet in both Google Sheets nodes. The sheet needs the header columns `phone`, `country` (optional), `valid`, `line_type`, `carrier`, `fraud_score`, `risky`, `checked_at` and `status`.\n\n### Customization\nSwap Google Sheets for Airtable or a CRM node by replacing the first and last nodes and keeping *Check phone* in the middle.\n\nTemplates and docs: https://github.com/dahleedam/fraudnova-examples/tree/main/examples/n8n",
+        "height": 560,
+        "width": 460,
+        "color": 1
       },
-      "name": "Setup notes",
+      "name": "Overview",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        -760,
-        -340
+        -880,
+        -300
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## New row\nA new row starts the run.\nSettings holds the default country.",
+        "height": 260,
+        "width": 420,
+        "color": 7
+      },
+      "name": "Section: New row",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -340,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Check the phone number\n1 credit per row.",
+        "height": 260,
+        "width": 220,
+        "color": 7
+      },
+      "name": "Section: Check the phone number",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        140,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Write results back\nThe row is matched on phone.",
+        "height": 260,
+        "width": 220,
+        "color": 7
+      },
+      "name": "Section: Write results back",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        400,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "content": "Pick the same document and sheet as the trigger",
+        "height": 240,
+        "width": 160,
+        "color": 3
+      },
+      "name": "Warning: document and sheet",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        430,
+        -230
       ]
     },
     {

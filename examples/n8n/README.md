@@ -15,7 +15,7 @@ Three importable [n8n](https://n8n.io) workflows that add FraudNova fraud checks
 3. Open the **Settings** node and set the value (see below).
 4. Connect the trigger and destination credentials (Telegram, WooCommerce or Google Sheets), then activate the workflow.
 
-Each workflow also carries a sticky note with these four steps.
+Each workflow's canvas carries a yellow overview note with three sections (How it works, Setup, Customization), white section notes that label groups of nodes, and, where a node needs your input, a red warning note.
 
 The credential value must be `Bearer ` followed by a space and your key; pasting only `fn_...` fails with a 401.
 
@@ -46,9 +46,9 @@ One credit per check, whichever type. The lead gate uses 2 credits per lead, the
 
 Replace the last node. In the WooCommerce workflow delete **Telegram alert** and connect the `true` output of **Risky?** to a Slack, Discord, Email or Microsoft Teams node; the same expressions (`$('Check phone').item.json.data.fraud_score` and friends) are available in its message field. In the lead gate, add your CRM or Airtable node after **Respond accepted** to store accepted leads. In the sheet workflow, swap Google Sheets for Airtable or a database node.
 
-## Template descriptions for n8n.io
+## Descriptions (fallback, the Creator Portal normally generates these)
 
-Paste-ready descriptions for the Creator Portal, one per template.
+n8n's Creator Portal generates the listing title and description automatically from the workflow. These paste-ready descriptions, one per template, are a fallback.
 
 ### Lead gate (webhook)
 
@@ -106,8 +106,20 @@ Anyone cleaning a lead or contact list who wants to know which numbers are real,
 
 ## Check the files
 
-`python3 validate.py` verifies the structure of every template (valid JSON, required node keys, connections, credentials by name only, both webhook responders connected, failed checks never read as risky).
+`python3 validate.py` verifies the structure of every template (valid JSON, required node keys, connections, credentials by name only, both webhook responders connected, failed checks never read as risky) and the sticky-note rules (one yellow overview with the three headings and 100 to 300 words, white section notes, short red warnings).
 
 ## Publishing to n8n's template library
 
-For the maintainer: submit each JSON file through your n8n creator account (<https://creators.n8n.io>). The credential is referenced by name only, so the files carry no ids or secrets.
+For the maintainer. The credential is referenced by name only, so the files carry no ids or secrets.
+
+Official guides:
+
+- [n8n Creator hub](https://n8n.notion.site/n8n-Creator-hub-7bd2cbe0fce0449198ecb23ff4a2f76f)
+- [Add sticky notes to templates](https://n8n.notion.site/Add-sticky-notes-to-templates-2aa5b6e0c94f8058b0aefddd02655887)
+
+To submit a template:
+
+1. Export the workflow JSON (these files).
+2. Import it into a fresh workflow in n8n.
+3. Follow your own instructions on the canvas (credential, settings, trigger and destination) to confirm they work.
+4. Submit it through the Creator Dashboard (<https://creators.n8n.io>).

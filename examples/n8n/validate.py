@@ -106,6 +106,35 @@ for path in files:
                 if ".data." in left and ".success === true" not in left:
                     err(path, f"IF condition reads data without checking success: {left[:80]}")
 
+    # Sticky-note rules (n8n Creator Hub): one yellow overview, white section notes, optional red warnings.
+    stickies = [n for n in nodes if n["type"] == "n8n-nodes-base.stickyNote"]
+    others = [n for n in nodes if n["type"] != "n8n-nodes-base.stickyNote"]
+
+    def words(n):
+        return len(n["parameters"].get("content", "").split())
+
+    overviews = [n for n in stickies if n["parameters"].get("color", 1) == 1]
+    if len(overviews) != 1:
+        err(path, f"needs exactly one overview sticky (color absent or 1), found {len(overviews)}")
+    else:
+        ov = overviews[0]
+        content = ov["parameters"].get("content", "")
+        headings = [ln.strip() for ln in content.splitlines() if ln.startswith("### ")]
+        if headings != ["### How it works", "### Setup", "### Customization"]:
+            err(path, f"overview must have the H3 headings How it works / Setup / Customization in order, found {headings}")
+        if not 100 <= words(ov) <= 300:
+            err(path, f"overview must be 100-300 words, is {words(ov)}")
+    whites = [n for n in stickies if n["parameters"].get("color") == 7]
+    if len(others) >= 4 and len(whites) < 2:
+        err(path, "workflows with 4+ nodes need at least two white (color 7) section notes")
+    for n in stickies:
+        color = n["parameters"].get("color")
+        limit = {7: 50, 3: 30}.get(color)
+        if limit is not None and words(n) >= limit:
+            err(path, f"sticky {n['name']!r} (color {color}) must be under {limit} words, is {words(n)}")
+        if color not in (None, 1, 3, 7):
+            err(path, f"sticky {n['name']!r} uses unsupported color {color}")
+
     print(("OK   " if not any(e.startswith(os.path.basename(path) + ":") for e in errors) else "FAIL ")
           + os.path.basename(path) + f" ({len(nodes)} nodes)")
 
