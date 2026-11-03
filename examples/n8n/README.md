@@ -38,7 +38,7 @@ The lead gate and the WooCommerce workflow have a **Settings** node with `risk_t
 
 ## What a failed check does
 
-Every HTTP Request node has *Continue on fail* on and every decision first checks `success === true`. If a check fails (no credits left (402), rate limit (429), bad input (422) or an upstream error (502)), it is treated as "not checked", never as risky: the lead gate accepts the lead with `scores: { "email": null, "ip": null }`, the WooCommerce workflow does not alert on what it could not check, and the sheet row is marked `error`.
+Every HTTP Request node has *Continue on fail* on and every decision first checks `success === true`. If a check fails (no credits left (402), rate limit (429), bad input (422) or an upstream error (503)), it is treated as "not checked", never as risky: the lead gate accepts the lead with `scores: { "email": null, "ip": null }`, the WooCommerce workflow does not alert on what it could not check, and the sheet row is marked `error`.
 
 ## Cost
 
