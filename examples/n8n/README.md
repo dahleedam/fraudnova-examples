@@ -125,3 +125,13 @@ To submit a template:
 2. Import it into a fresh workflow in n8n.
 3. Follow your own instructions on the canvas (credential, settings, trigger and destination) to confirm they work.
 4. Submit it through the Creator Dashboard (<https://creators.n8n.io>).
+
+## Using the FraudNova node instead of HTTP Request
+
+If you installed the [FraudNova community node](https://www.npmjs.com/package/n8n-nodes-fraudnova) (`n8n-nodes-fraudnova`), import [`node/fraudnova-node-demo.json`](node/fraudnova-node-demo.json) to see every operation in one workflow: a batch email check, IP checks feeding an IF node on the `flagged` field, the account balance, and an AI Agent that calls FraudNova as a tool. In n8n choose **Import from URL** and paste:
+
+```
+https://raw.githubusercontent.com/dahleedam/fraudnova-examples/main/examples/n8n/node/fraudnova-node-demo.json
+```
+
+It needs a FraudNova API credential and, for the agent branch only, an Anthropic credential; delete the agent branch if you don't use one. The three templates above stay the no-install option.
