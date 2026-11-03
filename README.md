@@ -42,7 +42,7 @@ Every successful single check returns this envelope (see [`openapi.json`](openap
 }
 ```
 
-(Abridged: the response also carries `operating_system`, `browser`, `device_brand` and `device_model`, which are populated when you pass `user_agent`.) Errors use `{ "success": false, "message": "..." }` with status 401 (bad token), 402 (insufficient credits), 422 (invalid input), 429 (rate or concurrency limit) or 502 (upstream unavailable).
+(Abridged: the response also carries `operating_system`, `browser`, `device_brand` and `device_model`, which are populated when you pass `user_agent`.) Errors use `{ "success": false, "message": "..." }` with status 401 (bad token), 402 (insufficient credits), 422 (invalid input), 429 (rate or concurrency limit) or 503 (upstream unavailable).
 
 ## Endpoints
 

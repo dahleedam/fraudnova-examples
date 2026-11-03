@@ -132,7 +132,7 @@
                             }
                         }
                     },
-                    "502": {
+                    "503": {
                         "description": "Upstream unavailable",
                         "content": {
                             "application/json": {
@@ -226,7 +226,7 @@
                             }
                         }
                     },
-                    "502": {
+                    "503": {
                         "description": "Upstream unavailable",
                         "content": {
                             "application/json": {
@@ -329,7 +329,7 @@
                             }
                         }
                     },
-                    "502": {
+                    "503": {
                         "description": "Upstream unavailable",
                         "content": {
                             "application/json": {

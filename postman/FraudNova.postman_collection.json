@@ -610,8 +610,8 @@
             "method": "GET",
             "body": {}
           },
-          "status": "Bad Gateway",
-          "code": 502,
+          "status": "Service Unavailable",
+          "code": 503,
           "header": [
             {
               "key": "Content-Type",
@@ -993,8 +993,8 @@
             "method": "GET",
             "body": {}
           },
-          "status": "Bad Gateway",
-          "code": 502,
+          "status": "Service Unavailable",
+          "code": 503,
           "header": [
             {
               "key": "Content-Type",
@@ -1439,8 +1439,8 @@
             "method": "GET",
             "body": {}
           },
-          "status": "Bad Gateway",
-          "code": 502,
+          "status": "Service Unavailable",
+          "code": 503,
           "header": [
             {
               "key": "Content-Type",
