@@ -1,0 +1,25 @@
+{
+  "name": "FraudNova demo",
+  "nodes": [
+    { "parameters": {}, "name": "Run demo", "type": "n8n-nodes-base.manualTrigger", "typeVersion": 1, "position": [0, 300] },
+    { "parameters": { "jsCode": "return ['hello@gmail.com', 'not-an-email', 'test@mailinator.com'].map((email) => ({ json: { email } }));" }, "name": "Three emails", "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [280, 0] },
+    { "parameters": { "resource": "email", "operation": "checkMany", "email": "={{ $json.email }}", "options": {} }, "name": "Check many emails", "type": "n8n-nodes-fraudnova.fraudNova", "typeVersion": 1, "position": [560, 0], "credentials": { "fraudNovaApi": { "name": "FraudNova account" } } },
+    { "parameters": { "jsCode": "return ['8.8.8.8', '185.220.101.1'].map((ip) => ({ json: { ip } }));" }, "name": "Two IPs", "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [280, 220] },
+    { "parameters": { "resource": "ip", "operation": "check", "ip": "={{ $json.ip }}", "options": {} }, "name": "Check IP addresses", "type": "n8n-nodes-fraudnova.fraudNova", "typeVersion": 1, "position": [560, 220], "credentials": { "fraudNovaApi": { "name": "FraudNova account" } } },
+    { "parameters": { "conditions": { "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 }, "conditions": [ { "id": "c1", "leftValue": "={{ $json.flagged }}", "rightValue": "", "operator": { "type": "boolean", "operation": "true", "singleValue": true } } ], "combinator": "and" }, "options": {} }, "name": "Flagged?", "type": "n8n-nodes-base.if", "typeVersion": 2.2, "position": [840, 220] },
+    { "parameters": { "resource": "account", "operation": "getBalance" }, "name": "Get balance", "type": "n8n-nodes-fraudnova.fraudNova", "typeVersion": 1, "position": [280, 440], "credentials": { "fraudNovaApi": { "name": "FraudNova account" } } },
+    { "parameters": { "promptType": "define", "text": "Is the IP address 185.220.101.1 safe to accept a signup from? Check it with the FraudNova tool and answer in one sentence.", "options": {} }, "name": "AI Agent", "type": "@n8n/n8n-nodes-langchain.agent", "typeVersion": 3.1, "position": [280, 640] },
+    { "parameters": { "model": { "__rl": true, "mode": "list", "value": "claude-sonnet-5", "cachedResultName": "Claude Sonnet 5" }, "options": {} }, "name": "Anthropic Chat Model", "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic", "typeVersion": 1.6, "position": [200, 860], "credentials": { "anthropicApi": { "name": "Anthropic account" } } },
+    { "parameters": { "ip": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('IP_Address', ``, 'string') }}", "options": {} }, "name": "FraudNova tool", "type": "n8n-nodes-fraudnova.fraudNovaTool", "typeVersion": 1, "position": [440, 860], "credentials": { "fraudNovaApi": { "name": "FraudNova account" } } }
+  ],
+  "connections": {
+    "Run demo": { "main": [ [ { "node": "Three emails", "type": "main", "index": 0 }, { "node": "Two IPs", "type": "main", "index": 0 }, { "node": "Get balance", "type": "main", "index": 0 }, { "node": "AI Agent", "type": "main", "index": 0 } ] ] },
+    "Three emails": { "main": [ [ { "node": "Check many emails", "type": "main", "index": 0 } ] ] },
+    "Two IPs": { "main": [ [ { "node": "Check IP addresses", "type": "main", "index": 0 } ] ] },
+    "Check IP addresses": { "main": [ [ { "node": "Flagged?", "type": "main", "index": 0 } ] ] },
+    "Anthropic Chat Model": { "ai_languageModel": [ [ { "node": "AI Agent", "type": "ai_languageModel", "index": 0 } ] ] },
+    "FraudNova tool": { "ai_tool": [ [ { "node": "AI Agent", "type": "ai_tool", "index": 0 } ] ] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "pinData": {}
+}
