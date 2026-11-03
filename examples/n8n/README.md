@@ -2,6 +2,8 @@
 
 Three importable [n8n](https://n8n.io) workflows that add FraudNova fraud checks to an automation you probably already run. They use only n8n's built-in nodes (HTTP Request plus one trigger and one destination each), so there is nothing to install, and they run on n8n Cloud or self-hosted.
 
+Prefer a single node over HTTP Request nodes? Install the [FraudNova community node](https://www.npmjs.com/package/n8n-nodes-fraudnova) (`n8n-nodes-fraudnova`): one credential, IP/email/phone checks, batch support and a `flagged` field for your IF node. These templates stay the no-install option.
+
 | File | Trigger | What it checks | Result |
 | --- | --- | --- | --- |
 | [`lead-gate-webhook.json`](lead-gate-webhook.json) | Webhook (`POST /webhook/fraudnova-lead-gate`) with `email` and `ip` in the JSON body | Email (`/check/email`) and IP (`/check`) | Responds `{"accepted": false, "reason": "...", "scores": {...}}` when the email is disposable, either score is at or above the threshold, or the IP is a proxy, VPN or Tor exit; otherwise `{"accepted": true, "scores": {...}}`. Works with your own site or any tool that lets you set the JSON body and read the reply (a custom form handler, another n8n workflow, a Make or Zapier webhook step). Form builders that post a fixed payload without the visitor's IP and ignore the response (for example Tally or Typeform) cannot drive it as-is. If `ip` is missing the IP check errors and is treated as not checked, so the decision rests on the email alone. |
