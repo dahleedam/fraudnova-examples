@@ -21,7 +21,7 @@ Each workflow's canvas carries a yellow overview note with three sections (How i
 
 The credential value must be `Bearer ` followed by a space and your key; pasting only `fn_...` fails with a 401.
 
-**Sheet template:** the sheet needs the header columns `phone`, optional `country`, `valid`, `line_type`, `carrier`, `fraud_score`, `risky`, `checked_at` and `status`. Format the `phone` column as plain text (or include `+` and the country code) so leading zeros are not lost.
+**Sheet template:** the sheet needs the header columns `phone`, optional `country`, `valid`, `line_type`, `carrier`, `fraud_score`, `risky`, `checked_at` and `status`. Format the `phone` column as plain text (or include `+` and the country code) so leading zeros are not lost. Pick your document in both Google Sheets nodes; **Update row** is preset to the tab named `Sheet1` (by name) so its column mapping survives the import, so change that if your tab has another name.
 
 ## The credential
 
@@ -99,7 +99,7 @@ Watches a Google Sheet for new rows, checks the phone number in each row with th
 ## Setup
 1. Create a Header Auth credential named `FraudNova API` with header `Authorization` and value `Bearer ` plus your key.
 2. Add the header columns `phone`, `country` (optional), `valid`, `line_type`, `carrier`, `fraud_score`, `risky`, `checked_at` and `status`, and format `phone` as plain text.
-3. Connect Google Sheets and pick the document and sheet in both Google Sheets nodes.
+3. Connect Google Sheets and pick your document in both Google Sheets nodes; Update row is preset to the tab named `Sheet1`, so change that if yours differs.
 4. Each row uses 1 credit. Rows are matched on `phone`.
 
 ## Who it is for
