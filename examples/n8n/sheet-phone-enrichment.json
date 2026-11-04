@@ -4,7 +4,7 @@
     {
       "parameters": {
         "content": "### How it works\nEnriches a Google Sheet of phone numbers with FraudNova. When a new row is added, the workflow checks the number in its `phone` column (and the optional `country` column) and writes `valid`, `line_type`, `carrier`, `fraud_score`, `risky`, `checked_at` and `status` back to the row. It helps anyone cleaning a lead or contact list before an SMS or call campaign.\nLimits: rows are matched on `phone`, so a duplicate number updates the first match. The `phone` column must be plain text (or include `+` and the country code) so leading zeros are not lost. A failed check writes `status` = `error`.\n\n### Setup\n1. Create a Header Auth credential named `FraudNova API`: header `Authorization`, value **`Bearer ` + space + your key** (key at https://fraudnova.com/dashboard/api-keys). New accounts get 25 free credits; each check costs 1 credit.\n2. Open **Settings** and set `default_country` (for example `US`) for rows without a `country` value.\n3. Select your Google Sheets credential, and pick the same document and sheet in both Google Sheets nodes. The sheet needs the header columns `phone`, `country` (optional), `valid`, `line_type`, `carrier`, `fraud_score`, `risky`, `checked_at` and `status`.\n\n### Customization\nSwap Google Sheets for Airtable or a CRM node by replacing the first and last nodes and keeping *Check phone* in the middle.\n\nTemplates and docs: https://github.com/dahleedam/fraudnova-examples/tree/main/examples/n8n",
-        "height": 900,
+        "height": 640,
         "width": 520,
         "color": 1
       },
