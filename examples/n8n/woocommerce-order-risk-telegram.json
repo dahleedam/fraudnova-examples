@@ -3,7 +3,7 @@
   "nodes": [
     {
       "parameters": {
-        "content": "### How it works\nScreens every new WooCommerce order with FraudNova and alerts you on Telegram when it looks risky. On each new order it checks the billing phone (with the billing country), the billing email and the customer IP. An order is risky when any score reaches your threshold, the phone is VOIP or risky, the email is disposable, or the IP is a proxy, VPN or Tor exit. The message shows the order number, total, name, the three scores and the flags. Other orders end the run. It helps store owners spot fraud before shipping. A failed check never alerts.\n\n### Setup\n1. Create a Header Auth credential named `FraudNova API`: header `Authorization`, value **`Bearer ` + space + your key** (key at https://fraudnova.com/dashboard/api-keys). New accounts get 25 free credits; each check costs 1 credit.\n2. Open **Settings** and set `risk_threshold` (default 75).\n3. Select your WooCommerce credential on the trigger. In the Telegram node pick your bot credential (create the bot with @BotFather) and set `chatId`.\n\n### Customization\nUse 85 to alert only on the worst orders. Replace the Telegram node with Slack, Discord or Email, connected to the `true` output of *Risky?*.\n\nTemplates and docs: https://github.com/dahleedam/fraudnova-examples/tree/main/examples/n8n",
+        "content": "### How it works\nScreens every new WooCommerce order with FraudNova and alerts you on Telegram when it looks risky. On each new order it checks the billing phone (with the billing country), the billing email and the customer IP. An order is risky when any score reaches your threshold, the phone is VOIP or risky, the email is disposable, or the IP is a proxy, VPN or Tor exit. The message shows the order number, total, name, the three scores and the flags. Other orders end the run. It helps store owners spot fraud before shipping. A failed check never alerts.\n\n### Setup\n1. Create a **Bearer Auth** credential named `FraudNova API` and paste your key as the token (key at https://fraudnova.com/dashboard/api-keys). New accounts get 25 free credits; each check costs 1 credit.\n2. Open **Settings** and set `risk_threshold` (default 75).\n3. Select your WooCommerce credential on the trigger. In the Telegram node pick your bot credential (create the bot with @BotFather) and set `chatId`.\n\n### Customization\nUse 85 to alert only on the worst orders. Replace the Telegram node with Slack, Discord or Email, connected to the `true` output of *Risky?*.\n\nTemplates and docs: https://github.com/dahleedam/fraudnova-examples/tree/main/examples/n8n",
         "height": 600,
         "width": 520,
         "color": 1
@@ -121,7 +121,7 @@
         "method": "GET",
         "url": "https://fraudnova.com/api/v1/check/phone",
         "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
+        "genericAuthType": "httpBearerAuth",
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
@@ -147,7 +147,7 @@
         0
       ],
       "credentials": {
-        "httpHeaderAuth": {
+        "httpBearerAuth": {
           "name": "FraudNova API"
         }
       },
@@ -158,7 +158,7 @@
         "method": "GET",
         "url": "https://fraudnova.com/api/v1/check/email",
         "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
+        "genericAuthType": "httpBearerAuth",
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
@@ -180,7 +180,7 @@
         0
       ],
       "credentials": {
-        "httpHeaderAuth": {
+        "httpBearerAuth": {
           "name": "FraudNova API"
         }
       },
@@ -191,7 +191,7 @@
         "method": "GET",
         "url": "https://fraudnova.com/api/v1/check",
         "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
+        "genericAuthType": "httpBearerAuth",
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
@@ -213,7 +213,7 @@
         0
       ],
       "credentials": {
-        "httpHeaderAuth": {
+        "httpBearerAuth": {
           "name": "FraudNova API"
         }
       },

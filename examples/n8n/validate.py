@@ -67,7 +67,7 @@ for path in files:
             if "id" in c:
                 err(path, f"node {n['name']!r} credential must be referenced by name only (no id)")
         if n.get("type") == "n8n-nodes-base.httpRequest":
-            if creds.get("httpHeaderAuth", {}).get("name") != "FraudNova API":
+            if creds.get("httpBearerAuth", {}).get("name") != "FraudNova API":
                 err(path, f"HTTP node {n['name']!r} must use credential 'FraudNova API'")
             if n.get("onError") != "continueRegularOutput":
                 err(path, f"HTTP node {n['name']!r} must set onError=continueRegularOutput")

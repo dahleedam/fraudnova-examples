@@ -19,16 +19,17 @@ Prefer a single node over HTTP Request nodes? Install the [FraudNova community n
 
 Each workflow's canvas carries a yellow overview note with three sections (How it works, Setup, Customization), white section notes that label groups of nodes, and, where a node needs your input, a red warning note.
 
-The credential value must be `Bearer ` followed by a space and your key; pasting only `fn_...` fails with a 401.
+Paste the key alone into the Bearer Auth credential; n8n adds the `Bearer ` prefix. (With a Header Auth credential you would have to type the prefix yourself, and a bare `fn_...` value fails with a 401.)
 
 **Sheet template:** the sheet needs the header columns `phone`, optional `country`, `valid`, `line_type`, `carrier`, `fraud_score`, `risky`, `checked_at` and `status`. Format the `phone` column as plain text (or include `+` and the country code) so leading zeros are not lost. Pick your document in both Google Sheets nodes; **Update row** is preset to the tab named `Sheet1` (by name) so its column mapping survives the import, so change that if your tab has another name.
 
 ## The credential
 
-Create one **Header Auth** credential in n8n named exactly `FraudNova API`:
+Create one **Bearer Auth** credential in n8n named exactly `FraudNova API` (HTTP Request node, Authentication *Generic Credential Type*, type *Bearer Auth*):
 
-- **Name:** `Authorization`
-- **Value:** `Bearer fn_your_api_key_here`
+- **Bearer Token:** your key, for example `fn_your_api_key_here`
+
+n8n adds the `Bearer ` prefix itself, so paste the key alone.
 
 Get a key under **Dashboard, API keys** at [fraudnova.com/dashboard/api-keys](https://fraudnova.com/dashboard/api-keys). Keys start with `fn_` and are shown once.
 
@@ -61,7 +62,7 @@ n8n's Creator Portal generates the listing title and description automatically f
 Receives a JSON POST with an email address and a visitor IP, checks both with the FraudNova API, and replies with an accept or reject decision. A lead is rejected when the email is disposable, either fraud score reaches your threshold, or the IP is a proxy, VPN or Tor exit. Both outcomes get a reply, so the caller never hangs. A failed check never rejects a lead: it is accepted with null scores.
 
 ## Setup
-1. Create a Header Auth credential named `FraudNova API` with header `Authorization` and value `Bearer ` plus your key.
+1. Create a Bearer Auth credential named `FraudNova API` and paste your key as the token.
 2. Set `risk_threshold` in the Settings node (default 75).
 3. POST `{ "email", "ip" }` to the webhook URL from your site or another workflow.
 4. Each lead uses 2 credits.
@@ -79,7 +80,7 @@ Marketers, affiliates and developers who collect leads through their own form ha
 Runs when WooCommerce creates an order and checks the billing phone, the billing email and the customer IP with the FraudNova API. If any score reaches your threshold, the phone is VOIP or risky, the email is disposable, or the IP is a proxy, VPN or Tor exit, it sends a Telegram message with the order number, total, customer name, the three scores and the flags. Other orders end quietly, and a failed check never triggers an alert.
 
 ## Setup
-1. Create a Header Auth credential named `FraudNova API` with header `Authorization` and value `Bearer ` plus your key.
+1. Create a Bearer Auth credential named `FraudNova API` and paste your key as the token.
 2. Set `risk_threshold` in the Settings node (default 75).
 3. Connect WooCommerce and a Telegram bot, and set the chat id.
 4. Each order uses 3 credits.
@@ -97,7 +98,7 @@ Store owners who want to spot fraudulent or high-risk orders before shipping, wi
 Watches a Google Sheet for new rows, checks the phone number in each row with the FraudNova API, and writes the result back to the same row: validity, line type, carrier, fraud score, a risky flag, a timestamp and a status. If a check fails, the row gets the status `error` and nothing else is changed.
 
 ## Setup
-1. Create a Header Auth credential named `FraudNova API` with header `Authorization` and value `Bearer ` plus your key.
+1. Create a Bearer Auth credential named `FraudNova API` and paste your key as the token.
 2. Add the header columns `phone`, `country` (optional), `valid`, `line_type`, `carrier`, `fraud_score`, `risky`, `checked_at` and `status`, and format `phone` as plain text.
 3. Connect Google Sheets and pick your document in both Google Sheets nodes; Update row is preset to the tab named `Sheet1`, so change that if yours differs.
 4. Each row uses 1 credit. Rows are matched on `phone`.
