@@ -526,6 +526,15 @@
             {
               "key": "Content-Type",
               "value": "application/json"
+            },
+            {
+              "disabled": false,
+              "description": {
+                "content": "Seconds to wait before retrying.",
+                "type": "text/plain"
+              },
+              "key": "Retry-After",
+              "value": "<integer>"
             }
           ],
           "body": "{\n  \"success\": false,\n  \"message\": \"<string>\"\n}",
@@ -726,7 +735,7 @@
               "value": "application/json"
             }
           ],
-          "body": "{\n  \"success\": \"<boolean>\",\n  \"data\": {\n    \"valid\": \"<boolean>\",\n    \"fraud_score\": \"<integer>\",\n    \"disposable\": \"<boolean>\",\n    \"deliverability\": \"<string>\",\n    \"smtp_score\": \"<integer>\",\n    \"overall_score\": \"<integer>\",\n    \"catch_all\": \"<boolean>\",\n    \"generic\": \"<boolean>\",\n    \"common\": \"<boolean>\",\n    \"dns_valid\": \"<boolean>\",\n    \"honeypot\": \"<boolean>\",\n    \"frequent_complainer\": \"<boolean>\",\n    \"suspect\": \"<boolean>\",\n    \"recent_abuse\": \"<boolean>\",\n    \"leaked\": \"<boolean>\",\n    \"spam_trap_score\": \"<string>\",\n    \"risky_tld\": \"<boolean>\",\n    \"spf_record\": \"<boolean>\",\n    \"dmarc_record\": \"<boolean>\",\n    \"first_seen\": \"<string,null>\",\n    \"domain_age\": \"<string,null>\",\n    \"result_type\": \"<string>\",\n    \"sanitized_email\": \"<string>\"\n  },\n  \"credits_remaining\": \"<integer>\"\n}",
+          "body": "{\n  \"success\": \"<boolean>\",\n  \"data\": {\n    \"valid\": \"<boolean>\",\n    \"fraud_score\": \"<integer>\",\n    \"disposable\": \"<boolean>\",\n    \"deliverability\": \"<string>\",\n    \"smtp_score\": \"<integer>\",\n    \"overall_score\": \"<integer>\",\n    \"catch_all\": \"<boolean>\",\n    \"generic\": \"<boolean>\",\n    \"common\": \"<boolean>\",\n    \"dns_valid\": \"<boolean>\",\n    \"honeypot\": \"<boolean>\",\n    \"frequent_complainer\": \"<boolean>\",\n    \"suspect\": \"<boolean>\",\n    \"recent_abuse\": \"<boolean>\",\n    \"leaked\": \"<boolean>\",\n    \"spam_trap_score\": \"<string>\",\n    \"risky_tld\": \"<boolean>\",\n    \"spf_record\": \"<boolean>\",\n    \"dmarc_record\": \"<boolean>\",\n    \"first_seen\": {\n      \"human\": \"<string>\",\n      \"timestamp\": \"<integer>\",\n      \"iso\": \"<dateTime>\"\n    },\n    \"domain_age\": {\n      \"human\": \"<string>\",\n      \"timestamp\": \"<integer>\",\n      \"iso\": \"<dateTime>\"\n    },\n    \"result_type\": \"<string>\",\n    \"sanitized_email\": \"<string>\"\n  },\n  \"credits_remaining\": \"<integer>\"\n}",
           "cookie": [],
           "_postman_previewlanguage": "json"
         },
@@ -944,6 +953,15 @@
             {
               "key": "Content-Type",
               "value": "application/json"
+            },
+            {
+              "disabled": false,
+              "description": {
+                "content": "Seconds to wait before retrying.",
+                "type": "text/plain"
+              },
+              "key": "Retry-After",
+              "value": "<integer>"
             }
           ],
           "body": "{\n  \"success\": false,\n  \"message\": \"<string>\"\n}",
@@ -1381,6 +1399,15 @@
             {
               "key": "Content-Type",
               "value": "application/json"
+            },
+            {
+              "disabled": false,
+              "description": {
+                "content": "Seconds to wait before retrying.",
+                "type": "text/plain"
+              },
+              "key": "Retry-After",
+              "value": "<integer>"
             }
           ],
           "body": "{\n  \"success\": false,\n  \"message\": \"<string>\"\n}",
@@ -1785,6 +1812,15 @@
             {
               "key": "Content-Type",
               "value": "application/json"
+            },
+            {
+              "disabled": false,
+              "description": {
+                "content": "Seconds to wait before retrying.",
+                "type": "text/plain"
+              },
+              "key": "Retry-After",
+              "value": "<integer>"
             }
           ],
           "body": "{\n  \"success\": false,\n  \"message\": \"<string>\"\n}",
@@ -1901,7 +1937,7 @@
               "value": "application/json"
             }
           ],
-          "body": "{\n  \"success\": \"<boolean>\",\n  \"results\": [\n    {\n      \"email\": \"<string>\",\n      \"success\": \"<boolean>\",\n      \"data\": {\n        \"valid\": \"<boolean>\",\n        \"fraud_score\": \"<integer>\",\n        \"disposable\": \"<boolean>\",\n        \"deliverability\": \"<string>\",\n        \"smtp_score\": \"<integer>\",\n        \"overall_score\": \"<integer>\",\n        \"catch_all\": \"<boolean>\",\n        \"generic\": \"<boolean>\",\n        \"common\": \"<boolean>\",\n        \"dns_valid\": \"<boolean>\",\n        \"honeypot\": \"<boolean>\",\n        \"frequent_complainer\": \"<boolean>\",\n        \"suspect\": \"<boolean>\",\n        \"recent_abuse\": \"<boolean>\",\n        \"leaked\": \"<boolean>\",\n        \"spam_trap_score\": \"<string>\",\n        \"risky_tld\": \"<boolean>\",\n        \"spf_record\": \"<boolean>\",\n        \"dmarc_record\": \"<boolean>\",\n        \"first_seen\": \"<string,null>\",\n        \"domain_age\": \"<string,null>\",\n        \"result_type\": \"<string>\",\n        \"sanitized_email\": \"<string>\"\n      },\n      \"error\": \"insufficient_credits\"\n    },\n    {\n      \"email\": \"<string>\",\n      \"success\": \"<boolean>\",\n      \"data\": {\n        \"valid\": \"<boolean>\",\n        \"fraud_score\": \"<integer>\",\n        \"disposable\": \"<boolean>\",\n        \"deliverability\": \"<string>\",\n        \"smtp_score\": \"<integer>\",\n        \"overall_score\": \"<integer>\",\n        \"catch_all\": \"<boolean>\",\n        \"generic\": \"<boolean>\",\n        \"common\": \"<boolean>\",\n        \"dns_valid\": \"<boolean>\",\n        \"honeypot\": \"<boolean>\",\n        \"frequent_complainer\": \"<boolean>\",\n        \"suspect\": \"<boolean>\",\n        \"recent_abuse\": \"<boolean>\",\n        \"leaked\": \"<boolean>\",\n        \"spam_trap_score\": \"<string>\",\n        \"risky_tld\": \"<boolean>\",\n        \"spf_record\": \"<boolean>\",\n        \"dmarc_record\": \"<boolean>\",\n        \"first_seen\": \"<string,null>\",\n        \"domain_age\": \"<string,null>\",\n        \"result_type\": \"<string>\",\n        \"sanitized_email\": \"<string>\"\n      },\n      \"error\": \"upstream_failed\"\n    }\n  ],\n  \"credits_remaining\": \"<integer>\"\n}",
+          "body": "{\n  \"success\": \"<boolean>\",\n  \"results\": [\n    {\n      \"email\": \"<string>\",\n      \"success\": \"<boolean>\",\n      \"data\": {\n        \"valid\": \"<boolean>\",\n        \"fraud_score\": \"<integer>\",\n        \"disposable\": \"<boolean>\",\n        \"deliverability\": \"<string>\",\n        \"smtp_score\": \"<integer>\",\n        \"overall_score\": \"<integer>\",\n        \"catch_all\": \"<boolean>\",\n        \"generic\": \"<boolean>\",\n        \"common\": \"<boolean>\",\n        \"dns_valid\": \"<boolean>\",\n        \"honeypot\": \"<boolean>\",\n        \"frequent_complainer\": \"<boolean>\",\n        \"suspect\": \"<boolean>\",\n        \"recent_abuse\": \"<boolean>\",\n        \"leaked\": \"<boolean>\",\n        \"spam_trap_score\": \"<string>\",\n        \"risky_tld\": \"<boolean>\",\n        \"spf_record\": \"<boolean>\",\n        \"dmarc_record\": \"<boolean>\",\n        \"first_seen\": {\n          \"human\": \"<string>\",\n          \"timestamp\": \"<integer>\",\n          \"iso\": \"<dateTime>\"\n        },\n        \"domain_age\": {\n          \"human\": \"<string>\",\n          \"timestamp\": \"<integer>\",\n          \"iso\": \"<dateTime>\"\n        },\n        \"result_type\": \"<string>\",\n        \"sanitized_email\": \"<string>\"\n      },\n      \"error\": \"insufficient_credits\"\n    },\n    {\n      \"email\": \"<string>\",\n      \"success\": \"<boolean>\",\n      \"data\": {\n        \"valid\": \"<boolean>\",\n        \"fraud_score\": \"<integer>\",\n        \"disposable\": \"<boolean>\",\n        \"deliverability\": \"<string>\",\n        \"smtp_score\": \"<integer>\",\n        \"overall_score\": \"<integer>\",\n        \"catch_all\": \"<boolean>\",\n        \"generic\": \"<boolean>\",\n        \"common\": \"<boolean>\",\n        \"dns_valid\": \"<boolean>\",\n        \"honeypot\": \"<boolean>\",\n        \"frequent_complainer\": \"<boolean>\",\n        \"suspect\": \"<boolean>\",\n        \"recent_abuse\": \"<boolean>\",\n        \"leaked\": \"<boolean>\",\n        \"spam_trap_score\": \"<string>\",\n        \"risky_tld\": \"<boolean>\",\n        \"spf_record\": \"<boolean>\",\n        \"dmarc_record\": \"<boolean>\",\n        \"first_seen\": {\n          \"human\": \"<string>\",\n          \"timestamp\": \"<integer>\",\n          \"iso\": \"<dateTime>\"\n        },\n        \"domain_age\": {\n          \"human\": \"<string>\",\n          \"timestamp\": \"<integer>\",\n          \"iso\": \"<dateTime>\"\n        },\n        \"result_type\": \"<string>\",\n        \"sanitized_email\": \"<string>\"\n      },\n      \"error\": \"upstream_failed\"\n    }\n  ],\n  \"credits_remaining\": \"<integer>\"\n}",
           "cookie": [],
           "_postman_previewlanguage": "json"
         },
@@ -2131,6 +2167,15 @@
             {
               "key": "Content-Type",
               "value": "application/json"
+            },
+            {
+              "disabled": false,
+              "description": {
+                "content": "Seconds to wait before retrying.",
+                "type": "text/plain"
+              },
+              "key": "Retry-After",
+              "value": "<integer>"
             }
           ],
           "body": "{\n  \"success\": false,\n  \"message\": \"<string>\"\n}",
@@ -2477,6 +2522,15 @@
             {
               "key": "Content-Type",
               "value": "application/json"
+            },
+            {
+              "disabled": false,
+              "description": {
+                "content": "Seconds to wait before retrying.",
+                "type": "text/plain"
+              },
+              "key": "Retry-After",
+              "value": "<integer>"
             }
           ],
           "body": "{\n  \"success\": false,\n  \"message\": \"<string>\"\n}",
@@ -2651,6 +2705,15 @@
             {
               "key": "Content-Type",
               "value": "application/json"
+            },
+            {
+              "disabled": false,
+              "description": {
+                "content": "Seconds to wait before retrying.",
+                "type": "text/plain"
+              },
+              "key": "Retry-After",
+              "value": "<integer>"
             }
           ],
           "body": "{\n  \"success\": false,\n  \"message\": \"<string>\"\n}",

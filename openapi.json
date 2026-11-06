@@ -130,6 +130,15 @@
                                     "$ref": "#/components/schemas/ErrorResponse"
                                 }
                             }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "integer",
+                                    "minimum": 1
+                                }
+                            }
                         }
                     },
                     "503": {
@@ -222,6 +231,15 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "integer",
+                                    "minimum": 1
                                 }
                             }
                         }
@@ -325,6 +343,15 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "integer",
+                                    "minimum": 1
                                 }
                             }
                         }
@@ -450,6 +477,15 @@
                                     "$ref": "#/components/schemas/ErrorResponse"
                                 }
                             }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "integer",
+                                    "minimum": 1
+                                }
+                            }
                         }
                     }
                 }
@@ -547,6 +583,15 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "integer",
+                                    "minimum": 1
                                 }
                             }
                         }
@@ -652,6 +697,15 @@
                                     "$ref": "#/components/schemas/ErrorResponse"
                                 }
                             }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "integer",
+                                    "minimum": 1
+                                }
+                            }
                         }
                     }
                 }
@@ -700,6 +754,15 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "integer",
+                                    "minimum": 1
                                 }
                             }
                         }
