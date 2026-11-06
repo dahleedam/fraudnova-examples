@@ -61,7 +61,7 @@ Base URL: `https://fraudnova.com/api/v1`. Authenticate with `Authorization: Bear
 
 Batch endpoints return HTTP 200 with one result per input; an item that fails carries `"success": false` and an `error` of `invalid_ip` / `invalid_email` / `invalid_phone`, `insufficient_credits` or `upstream_failed`. Single-check rate limits and the per-account concurrency cap are described in the [docs](https://fraudnova.com/docs).
 
-Related pages: [status](https://fraudnova.com/status), [changelog](https://fraudnova.com/changelog), [guides](https://fraudnova.com/guides). Official clients: the [PHP SDK](https://github.com/dahleedam/fraudnova-php) (`fraudnova/fraudnova-php` on Packagist) and the [n8n node](https://www.npmjs.com/package/n8n-nodes-fraudnova).
+Related pages: [status](https://fraudnova.com/status), [changelog](https://fraudnova.com/changelog), [guides](https://fraudnova.com/guides). Official clients: the [PHP SDK](https://github.com/dahleedam/fraudnova-php) (`fraudnova/fraudnova-php` on Packagist), the [Python SDK](https://github.com/dahleedam/fraudnova-python) (`fraudnova` on PyPI) and the [n8n node](https://www.npmjs.com/package/n8n-nodes-fraudnova).
 
 ## Try it without an account
 
@@ -111,7 +111,7 @@ bash examples/curl/batch_ip.sh 8.8.8.8 1.1.1.1
 bash examples/curl/balance.sh
 ```
 
-**Python** (3.x, [`requests`](https://pypi.org/project/requests/))
+**Python** (3.x, [`requests`](https://pypi.org/project/requests/)). For application code, use the official Python SDK instead: `pip install fraudnova` ([PyPI](https://pypi.org/project/fraudnova/), [GitHub](https://github.com/dahleedam/fraudnova-python)); it covers every endpoint with typed results, exceptions and automatic batch chunking.
 
 ```bash
 pip install -r examples/python/requirements.txt
