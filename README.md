@@ -61,7 +61,7 @@ Base URL: `https://fraudnova.com/api/v1`. Authenticate with `Authorization: Bear
 
 Batch endpoints return HTTP 200 with one result per input; an item that fails carries `"success": false` and an `error` of `invalid_ip` / `invalid_email` / `invalid_phone`, `insufficient_credits` or `upstream_failed`. Single-check rate limits and the per-account concurrency cap are described in the [docs](https://fraudnova.com/docs).
 
-Related pages: [status](https://fraudnova.com/status), [changelog](https://fraudnova.com/changelog), [guides](https://fraudnova.com/guides).
+Related pages: [status](https://fraudnova.com/status), [changelog](https://fraudnova.com/changelog), [guides](https://fraudnova.com/guides). Official clients: the [PHP SDK](https://github.com/dahleedam/fraudnova-php) (`fraudnova/fraudnova-php` on Packagist) and the [n8n node](https://www.npmjs.com/package/n8n-nodes-fraudnova).
 
 ## Try it without an account
 
@@ -128,7 +128,7 @@ node examples/node/check_email.mjs user@example.com
 node examples/node/batch_phone.mjs 18176791808 14155552671
 ```
 
-**PHP** (CLI with `ext-curl`, no Composer)
+**PHP** (CLI with `ext-curl`, no Composer). For application code, use the official PHP SDK instead: `composer require fraudnova/fraudnova-php guzzlehttp/guzzle` ([Packagist](https://packagist.org/packages/fraudnova/fraudnova-php), [GitHub](https://github.com/dahleedam/fraudnova-php)); it covers every endpoint with typed results, exceptions and a Laravel facade.
 
 ```bash
 php examples/php/check_ip.php 8.8.8.8

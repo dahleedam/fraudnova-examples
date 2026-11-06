@@ -893,22 +893,47 @@
                         "type": "boolean"
                     },
                     "first_seen": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
+                        "$ref": "#/components/schemas/DateInfo"
                     },
                     "domain_age": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
+                        "$ref": "#/components/schemas/DateInfo"
                     },
                     "result_type": {
                         "type": "string"
                     },
                     "sanitized_email": {
                         "type": "string"
+                    }
+                }
+            },
+            "DateInfo": {
+                "type": [
+                    "object",
+                    "null"
+                ],
+                "description": "A point in time, given three ways. Null when unknown.",
+                "properties": {
+                    "human": {
+                        "type": "string",
+                        "description": "Relative wording, e.g. \"3 months ago\"",
+                        "examples": [
+                            "3 months ago"
+                        ]
+                    },
+                    "timestamp": {
+                        "type": "integer",
+                        "description": "Unix timestamp (seconds)",
+                        "examples": [
+                            1568061634
+                        ]
+                    },
+                    "iso": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "ISO 8601 date-time",
+                        "examples": [
+                            "2019-09-09T16:40:34-04:00"
+                        ]
                     }
                 }
             },
