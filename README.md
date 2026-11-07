@@ -61,7 +61,7 @@ Base URL: `https://fraudnova.com/api/v1`. Authenticate with `Authorization: Bear
 
 Batch endpoints return HTTP 200 with one result per input; an item that fails carries `"success": false` and an `error` of `invalid_ip` / `invalid_email` / `invalid_phone`, `insufficient_credits` or `upstream_failed`. Single-check rate limits and the per-account concurrency cap are described in the [docs](https://fraudnova.com/docs).
 
-Related pages: [status](https://fraudnova.com/status), [changelog](https://fraudnova.com/changelog), [guides](https://fraudnova.com/guides). Official clients: the [PHP SDK](https://github.com/dahleedam/fraudnova-php) (`fraudnova/fraudnova-php` on Packagist), the [Python SDK](https://github.com/dahleedam/fraudnova-python) (`fraudnova` on PyPI) and the [n8n node](https://www.npmjs.com/package/n8n-nodes-fraudnova).
+Related pages: [status](https://fraudnova.com/status), [changelog](https://fraudnova.com/changelog), [guides](https://fraudnova.com/guides). Official clients: the [PHP SDK](https://github.com/dahleedam/fraudnova-php) (`fraudnova/fraudnova-php` on Packagist), the [Python SDK](https://github.com/dahleedam/fraudnova-python) (`fraudnova` on PyPI), the [Node.js SDK](https://github.com/dahleedam/fraudnova-node) (`@fraudnova/sdk` on npm) and the [n8n node](https://www.npmjs.com/package/n8n-nodes-fraudnova).
 
 ## Try it without an account
 
@@ -120,7 +120,7 @@ python3 examples/python/check_phone.py 18176791808 US
 python3 examples/python/batch_email.py user@example.com test@example.org
 ```
 
-**Node.js** (18+, built-in `fetch`, no install step)
+**Node.js** (18+, built-in `fetch`, no install step). For application code, use the official Node.js SDK instead: `npm install @fraudnova/sdk` ([npm](https://www.npmjs.com/package/@fraudnova/sdk), [GitHub](https://github.com/dahleedam/fraudnova-node)); it covers every endpoint with typed results, errors and automatic batch chunking.
 
 ```bash
 node examples/node/check_ip.mjs 8.8.8.8
