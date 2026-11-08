@@ -140,6 +140,10 @@ php examples/php/batch_ip.php 8.8.8.8 1.1.1.1
 
 Three importable workflows (webhook lead gate, WooCommerce order risk alert on Telegram, Google Sheets phone enrichment) live in [`examples/n8n`](examples/n8n). Import a JSON file into n8n, create one `FraudNova API` Header Auth credential and set one threshold. See [`examples/n8n/README.md`](examples/n8n/README.md).
 
+**Affiliate tracker gate**
+
+A redirect gate for affiliate trackers: it scores each click's IP with FraudNova and sends the visitor to your money page or a safe page. It comes as a PHP gate and a Node.js gate, plus a custom stream filter for self-hosted Keitaro. Setup, configuration and tracker postback templates are in [`examples/tracker-gate/README.md`](examples/tracker-gate/README.md).
+
 **WordPress / WooCommerce** (official plugin)
 
 The [`fraudnova` plugin](https://wordpress.org/plugins/fraudnova/) scores the IP, billing phone and email of every new WooCommerce order and holds or flags risky cash-on-delivery orders. It also blocks throwaway emails and proxy traffic on WordPress and WooCommerce registration and Contact Form 7. Setup and details are in the [WordPress docs](https://fraudnova.com/docs#wordpress), and the source is on [GitHub](https://github.com/dahleedam/fraudnova-wordpress).

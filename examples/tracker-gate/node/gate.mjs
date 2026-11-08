@@ -253,7 +253,7 @@ export function createGate(config, { client, reporter, now } = {}) {
     // Prefetchers and link checkers send HEAD: never spend a credit, fire a postback,
     // or reveal the money page to them.
     const decision = verb === 'HEAD'
-      ? { decision: 'allow', score: null, reason: 'head', cached: false }
+      ? { decision: 'block', score: null, reason: 'head', cached: false }
       : await decide(ip, headerValue(headers, 'user-agent'), headerValue(headers, 'accept-language'));
 
     const asked = query.get('route');
@@ -272,7 +272,7 @@ export function createGate(config, { client, reporter, now } = {}) {
       location = route.safe;
     }
 
-    if (decision.decision === 'block' && cfg.report_url) {
+    if (decision.decision === 'block' && verb !== 'HEAD' && cfg.report_url) {
       try {
         await report(substitute(cfg.report_url, query));
       } catch {

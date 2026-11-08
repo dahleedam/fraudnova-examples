@@ -352,7 +352,7 @@ test('HEAD goes to the safe URL without calling the API or reporting', async () 
   assert.equal(r.headers.Location, 'https://safe.example/?clickid=abc');
   assert.equal(calls.length, 0);
   assert.deepEqual(reported, []);
-  assert.ok(readFileSync(log, 'utf8').includes(' allow - head default '));
+  assert.ok(readFileSync(log, 'utf8').includes(' block - head default '));
 });
 
 test('api_key falls back to FRAUDNOVA_API_KEY', () => {
