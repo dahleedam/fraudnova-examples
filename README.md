@@ -61,7 +61,7 @@ Base URL: `https://fraudnova.com/api/v1`. Authenticate with `Authorization: Bear
 
 Batch endpoints return HTTP 200 with one result per input; an item that fails carries `"success": false` and an `error` of `invalid_ip` / `invalid_email` / `invalid_phone`, `insufficient_credits` or `upstream_failed`. Single-check rate limits and the per-account concurrency cap are described in the [docs](https://fraudnova.com/docs).
 
-Related pages: [status](https://fraudnova.com/status), [changelog](https://fraudnova.com/changelog), [guides](https://fraudnova.com/guides). Official clients: the [PHP SDK](https://github.com/dahleedam/fraudnova-php) (`fraudnova/fraudnova-php` on Packagist), the [Python SDK](https://github.com/dahleedam/fraudnova-python) (`fraudnova` on PyPI), the [Node.js SDK](https://github.com/dahleedam/fraudnova-node) (`@fraudnova/sdk` on npm) and the [n8n node](https://www.npmjs.com/package/n8n-nodes-fraudnova).
+Related pages: [status](https://fraudnova.com/status), [changelog](https://fraudnova.com/changelog), [guides](https://fraudnova.com/guides). Official clients: the [PHP SDK](https://github.com/dahleedam/fraudnova-php) (`fraudnova/fraudnova-php` on Packagist), the [Python SDK](https://github.com/dahleedam/fraudnova-python) (`fraudnova` on PyPI), the [Node.js SDK](https://github.com/dahleedam/fraudnova-node) (`@fraudnova/sdk` on npm), the [n8n node](https://www.npmjs.com/package/n8n-nodes-fraudnova) and the [WordPress plugin](https://github.com/dahleedam/fraudnova-wordpress) (`fraudnova` in the WordPress plugin directory, WooCommerce order scoring and form protection).
 
 ## Try it without an account
 
@@ -139,6 +139,10 @@ php examples/php/batch_ip.php 8.8.8.8 1.1.1.1
 **n8n** (workflow templates, no install step)
 
 Three importable workflows (webhook lead gate, WooCommerce order risk alert on Telegram, Google Sheets phone enrichment) live in [`examples/n8n`](examples/n8n). Import a JSON file into n8n, create one `FraudNova API` Header Auth credential and set one threshold. See [`examples/n8n/README.md`](examples/n8n/README.md).
+
+**WordPress / WooCommerce** (official plugin)
+
+The [`fraudnova` plugin](https://wordpress.org/plugins/fraudnova/) scores the IP, billing phone and email of every new WooCommerce order and holds or flags risky cash-on-delivery orders. It also blocks throwaway emails and proxy traffic on WordPress and WooCommerce registration and Contact Form 7. Setup and details are in the [WordPress docs](https://fraudnova.com/docs#wordpress), and the source is on [GitHub](https://github.com/dahleedam/fraudnova-wordpress).
 
 ## OpenAPI and Postman
 
