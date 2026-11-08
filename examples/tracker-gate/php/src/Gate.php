@@ -81,6 +81,7 @@ final class Gate
         if (! is_int($config['timeout_ms']) || $config['timeout_ms'] <= 0) {
             throw new \InvalidArgumentException('config "timeout_ms" must be a positive integer');
         }
+        self::trustMode($config['trust_proxy_headers']);
         if (! is_array($config['routes']) || ! isset($config['routes']['default'])) {
             throw new \InvalidArgumentException('config "routes" must contain a "default" route');
         }
@@ -92,6 +93,28 @@ final class Gate
                 }
             }
         }
+    }
+
+    /**
+     * Normalizes trust_proxy_headers: false (connection address only), true (CF-Connecting-IP, then the
+     * first X-Forwarded-For entry), or one header name ('cf-connecting-ip' / 'x-forwarded-for', any case)
+     * meaning only that header is trusted.
+     *
+     * @return bool|'cf-connecting-ip'|'x-forwarded-for'
+     */
+    public static function trustMode(mixed $value): bool|string
+    {
+        if (is_bool($value)) {
+            return $value;
+        }
+        if (is_string($value)) {
+            $name = strtolower(trim($value));
+            if ($name === 'cf-connecting-ip' || $name === 'x-forwarded-for') {
+                return $name;
+            }
+        }
+
+        throw new \InvalidArgumentException('config "trust_proxy_headers" must be false, true, \'cf-connecting-ip\' or \'x-forwarded-for\'');
     }
 
     /**
@@ -118,7 +141,7 @@ final class Gate
     public function decide(?string $ip, ?string $userAgent, ?string $language): array
     {
         $ip = $ip === null ? null : self::normalizeIp($ip);
-        if ($ip === null) {
+        if ($ip === null || ! self::isPublicIp($ip)) {
             return ['decision' => 'allow', 'score' => null, 'reason' => 'no_ip', 'cached' => false];
         }
 
@@ -174,7 +197,11 @@ final class Gate
             return ['status' => 405, 'headers' => ['Allow' => 'GET, HEAD', 'Cache-Control' => 'no-store'], 'body' => ''];
         }
 
-        $ip = self::clientIp($server, (bool) $this->config['trust_proxy_headers']);
+        $trust = self::trustMode($this->config['trust_proxy_headers']);
+        $ip = self::clientIp($server, $trust);
+        if ($trust === false) {
+            $this->warnIfBehindProxy($server);
+        }
         $decision = $method === 'HEAD'
             // Prefetchers and link checkers send HEAD: no credit, no postback, and they only ever see the safe URL.
             ? ['decision' => 'block', 'score' => null, 'reason' => 'head', 'cached' => false]
@@ -187,6 +214,11 @@ final class Gate
 
         $toMoney = $decision['decision'] === 'allow' || ($decision['decision'] === 'error' && $this->config['fail_open']);
         $location = self::destination((string) $route[$toMoney ? 'money' : 'safe'], $query, $decision);
+        // e.g. a placeholder in the host that expanded to nothing leaves no host behind.
+        $parts = parse_url($location);
+        if (preg_match('#^https?://[^\s/?\#]+#i', $location) !== 1 || ! is_array($parts) || ! isset($parts['host']) || $parts['host'] === '') {
+            $location = (string) $route['safe'];
+        }
 
         if ($decision['decision'] === 'block' && $decision['reason'] !== 'head' && is_string($this->config['report_url']) && $this->config['report_url'] !== '') {
             try {
@@ -201,12 +233,20 @@ final class Gate
         return ['status' => 302, 'headers' => ['Location' => $location, 'Cache-Control' => 'no-store'], 'body' => ''];
     }
 
-    /** @param array<string,mixed> $server */
-    public static function clientIp(array $server, bool $trustProxyHeaders): ?string
+    /**
+     * The visitor IP: the trusted header(s) first (see trustMode()), then the connection address.
+     * Private, loopback, link-local and reserved addresses are skipped; null when no public address remains.
+     *
+     * @param  array<string,mixed>  $server
+     */
+    public static function clientIp(array $server, bool|string $trustProxyHeaders): ?string
     {
+        $trust = self::trustMode($trustProxyHeaders);
         $candidates = [];
-        if ($trustProxyHeaders) {
+        if ($trust === true || $trust === 'cf-connecting-ip') {
             $candidates[] = $server['HTTP_CF_CONNECTING_IP'] ?? null;
+        }
+        if ($trust === true || $trust === 'x-forwarded-for') {
             $forwarded = $server['HTTP_X_FORWARDED_FOR'] ?? null;
             if (is_string($forwarded)) {
                 $candidates[] = explode(',', $forwarded)[0];
@@ -219,12 +259,46 @@ final class Gate
                 continue;
             }
             $ip = self::normalizeIp($candidate);
-            if ($ip !== null) {
+            if ($ip !== null && self::isPublicIp($ip)) {
                 return $ip;
             }
         }
 
         return null;
+    }
+
+    /**
+     * False for private, loopback, link-local, shared (100.64/10), unspecified and other reserved
+     * addresses. Expects a normalized IP (an IPv4-mapped address already unmapped).
+     */
+    public static function isPublicIp(string $ip): bool
+    {
+        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) {
+            return false;
+        }
+        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) !== false) {
+            // 100.64.0.0/10 (carrier-grade NAT) is not covered by the flags above.
+            $long = (int) ip2long($ip);
+
+            return ($long & 0xFFC00000) !== (100 << 24 | 64 << 16);
+        }
+
+        return true;
+    }
+
+    /**
+     * A private connection address with trust_proxy_headers off almost always means a proxy sits in
+     * front of the gate: every click would then be no_ip. Say so in the error log.
+     *
+     * @param  array<string,mixed>  $server
+     */
+    private function warnIfBehindProxy(array $server): void
+    {
+        $remote = $server['REMOTE_ADDR'] ?? null;
+        $ip = is_string($remote) ? self::normalizeIp($remote) : null;
+        if ($ip !== null && ! self::isPublicIp($ip)) {
+            error_log('fraudnova-gate: the connection address is private, so the gate appears to sit behind a proxy and trust_proxy_headers is off; clicks are not scored (no_ip). See the README to set trust_proxy_headers.');
+        }
     }
 
     /**

@@ -326,15 +326,119 @@ final class GateTest extends TestCase
 
     public function test_client_ip_honours_trusted_headers(): void
     {
-        $server = ['REMOTE_ADDR' => '10.0.0.1', 'HTTP_CF_CONNECTING_IP' => '203.0.113.9', 'HTTP_X_FORWARDED_FOR' => '198.51.100.7, 10.0.0.2'];
-        $this->assertSame('10.0.0.1', Gate::clientIp($server, false));
+        $server = ['REMOTE_ADDR' => '192.0.2.1', 'HTTP_CF_CONNECTING_IP' => '203.0.113.9', 'HTTP_X_FORWARDED_FOR' => '198.51.100.7, 10.0.0.2'];
+        $this->assertSame('192.0.2.1', Gate::clientIp($server, false));
         $this->assertSame('203.0.113.9', Gate::clientIp($server, true));
 
         unset($server['HTTP_CF_CONNECTING_IP']);
         $this->assertSame('198.51.100.7', Gate::clientIp($server, true));
 
         $server['HTTP_X_FORWARDED_FOR'] = 'garbage';
-        $this->assertSame('10.0.0.1', Gate::clientIp($server, true));
+        $this->assertSame('192.0.2.1', Gate::clientIp($server, true));
+    }
+
+    public function test_client_ip_trusts_only_the_named_header(): void
+    {
+        $server = ['REMOTE_ADDR' => '192.0.2.1', 'HTTP_CF_CONNECTING_IP' => '203.0.113.9', 'HTTP_X_FORWARDED_FOR' => '198.51.100.7, 10.0.0.2'];
+        $this->assertSame('203.0.113.9', Gate::clientIp($server, 'cf-connecting-ip'));
+        $this->assertSame('203.0.113.9', Gate::clientIp($server, 'CF-Connecting-IP'));
+        $this->assertSame('198.51.100.7', Gate::clientIp($server, 'x-forwarded-for'));
+        $this->assertSame('198.51.100.7', Gate::clientIp($server, 'X-Forwarded-For'));
+
+        // The other header is ignored, so a spoofed one changes nothing; a missing trusted one falls back to the connection.
+        $this->assertSame('192.0.2.1', Gate::clientIp(['REMOTE_ADDR' => '192.0.2.1', 'HTTP_X_FORWARDED_FOR' => '198.51.100.7'], 'cf-connecting-ip'));
+        $this->assertSame('192.0.2.1', Gate::clientIp(['REMOTE_ADDR' => '192.0.2.1', 'HTTP_CF_CONNECTING_IP' => '203.0.113.9'], 'x-forwarded-for'));
+    }
+
+    public function test_named_trusted_header_through_handle(): void
+    {
+        $server = ['REQUEST_METHOD' => 'GET', 'REMOTE_ADDR' => '192.0.2.1', 'HTTP_CF_CONNECTING_IP' => '203.0.113.9', 'HTTP_X_FORWARDED_FOR' => '198.51.100.7'];
+
+        $this->stub->queue[] = $this->ok(10);
+        $this->gate(['trust_proxy_headers' => 'x-forwarded-for'])->handle($server, []);
+        $this->assertStringContainsString('ip=198.51.100.7', $this->stub->requests[0]->getUri()->getQuery());
+
+        $this->stub->queue[] = $this->ok(10);
+        $this->gate(['trust_proxy_headers' => 'cf-connecting-ip'])->handle($server, []);
+        $this->assertStringContainsString('ip=203.0.113.9', $this->stub->requests[1]->getUri()->getQuery());
+    }
+
+    /** @return array<string,array{mixed}> */
+    public static function badTrustModes(): array
+    {
+        return ['other header' => ['x-real-ip'], 'empty string' => [''], 'int 1' => [1], 'array' => [['cf-connecting-ip']]];
+    }
+
+    #[DataProvider('badTrustModes')]
+    public function test_bad_trust_proxy_headers_throws_at_construction(mixed $value): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('trust_proxy_headers');
+        $this->gate(['trust_proxy_headers' => $value]);
+    }
+
+    /** @return array<string,array{string}> */
+    public static function nonPublicIps(): array
+    {
+        return [
+            '10/8' => ['10.1.2.3'], '172.16/12' => ['172.20.0.1'], '192.168/16' => ['192.168.1.1'], '127/8' => ['127.0.0.1'],
+            '169.254/16' => ['169.254.10.10'], '0/8' => ['0.1.2.3'], '100.64/10' => ['100.100.1.1'], '::1' => ['::1'],
+            'fc00::/7' => ['fd12:3456::1'], 'fe80::/10' => ['fe80::1'], 'mapped private' => ['::ffff:192.168.1.1'],
+            'mapped loopback' => ['::ffff:127.0.0.1'],
+        ];
+    }
+
+    #[DataProvider('nonPublicIps')]
+    public function test_private_and_reserved_addresses_are_never_scored(string $ip): void
+    {
+        $this->assertNull(Gate::clientIp(['REMOTE_ADDR' => $ip], false));
+        $d = $this->gate()->decide($ip, null, null);
+        $this->assertSame('no_ip', $d['reason']);
+        $this->assertSame('allow', $d['decision']);
+        $this->assertCount(0, $this->stub->requests);
+    }
+
+    public function test_100_64_boundaries(): void
+    {
+        $this->assertFalse(Gate::isPublicIp('100.127.255.255'));
+        $this->assertTrue(Gate::isPublicIp('100.63.255.255'));
+        $this->assertTrue(Gate::isPublicIp('100.128.0.0'));
+    }
+
+    public function test_private_header_falls_through_to_the_next_candidate(): void
+    {
+        $server = ['REMOTE_ADDR' => '192.0.2.1', 'HTTP_CF_CONNECTING_IP' => '10.0.0.5', 'HTTP_X_FORWARDED_FOR' => '198.51.100.7'];
+        $this->assertSame('198.51.100.7', Gate::clientIp($server, true));
+        $this->assertSame('192.0.2.1', Gate::clientIp($server, 'cf-connecting-ip'));
+
+        $this->assertNull(Gate::clientIp(['REMOTE_ADDR' => '10.0.0.1', 'HTTP_X_FORWARDED_FOR' => '192.168.0.9'], 'x-forwarded-for'));
+    }
+
+    public function test_private_connection_without_trust_is_no_ip_and_logs_a_hint(): void
+    {
+        $errorLog = $this->tempFile();
+        $previous = ini_set('error_log', $errorLog);
+        try {
+            $r = $this->gate()->handle(['REQUEST_METHOD' => 'GET', 'REMOTE_ADDR' => '10.0.0.1', 'HTTP_CF_CONNECTING_IP' => '203.0.113.9'], ['clickid' => 'abc']);
+        } finally {
+            ini_set('error_log', (string) $previous);
+        }
+        $this->assertSame('https://lp.example/?clickid=abc', $r['headers']['Location']);
+        $this->assertCount(0, $this->stub->requests);
+        $this->assertStringContainsString('trust_proxy_headers is off', (string) file_get_contents($errorLog));
+    }
+
+    public function test_private_connection_with_trust_does_not_log_the_hint(): void
+    {
+        $errorLog = $this->tempFile();
+        $previous = ini_set('error_log', $errorLog);
+        try {
+            $this->stub->queue[] = $this->ok(10);
+            $this->gate(['trust_proxy_headers' => 'cf-connecting-ip'])->handle(['REQUEST_METHOD' => 'GET', 'REMOTE_ADDR' => '10.0.0.1', 'HTTP_CF_CONNECTING_IP' => '203.0.113.9'], []);
+        } finally {
+            ini_set('error_log', (string) $previous);
+        }
+        $this->assertStringNotContainsString('trust_proxy_headers', (string) @file_get_contents($errorLog));
     }
 
     public function test_user_agent_and_language_are_sent(): void
@@ -392,7 +496,7 @@ final class GateTest extends TestCase
 
     public function test_trust_proxy_headers_through_handle(): void
     {
-        $server = ['REQUEST_METHOD' => 'GET', 'REMOTE_ADDR' => '10.0.0.1', 'HTTP_CF_CONNECTING_IP' => '203.0.113.9'];
+        $server = ['REQUEST_METHOD' => 'GET', 'REMOTE_ADDR' => '192.0.2.1', 'HTTP_CF_CONNECTING_IP' => '203.0.113.9'];
 
         $this->stub->queue[] = $this->ok(10);
         $this->gate(['trust_proxy_headers' => true])->handle($server, []);
@@ -400,7 +504,25 @@ final class GateTest extends TestCase
 
         $this->stub->queue[] = $this->ok(10);
         $this->gate()->handle($server, []);
-        $this->assertStringContainsString('ip=10.0.0.1', $this->stub->requests[1]->getUri()->getQuery());
+        $this->assertStringContainsString('ip=192.0.2.1', $this->stub->requests[1]->getUri()->getQuery());
+    }
+
+    public function test_a_placeholder_that_empties_the_host_falls_back_to_the_safe_url(): void
+    {
+        $this->stub->queue[] = $this->ok(10);
+        $gate = $this->gate(['routes' => ['default' => ['money' => 'https://{host}/x', 'safe' => 'https://safe.example/']]]);
+        $r = $gate->handle($this->server(), []);
+        $this->assertSame(302, $r['status']);
+        $this->assertSame('https://safe.example/', $r['headers']['Location']);
+    }
+
+    public function test_repeated_query_parameter_uses_the_last_value(): void
+    {
+        // PHP itself keeps the last value of a repeated parameter in $_GET; the Node gate matches it.
+        parse_str('clickid=a&clickid=b&sub1=x&sub1=y', $query);
+        $this->stub->queue[] = $this->ok(10);
+        $r = $this->gate()->handle($this->server(), $query);
+        $this->assertSame('https://lp.example/?clickid=b&sub1=y', $r['headers']['Location']);
     }
 
     public function test_destination_keeps_fragment_last(): void

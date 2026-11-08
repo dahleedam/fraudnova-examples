@@ -29,8 +29,10 @@ return [
     // true: send visitors to the money page when the API errors or times out. false: send them to the safe page.
     'fail_open' => true,
 
-    // Read the visitor IP from CF-Connecting-IP / X-Forwarded-For. Enable only behind a proxy you control.
-    // X-Forwarded-For is trusted only when your proxy overwrites it rather than appends to it.
+    // Where the visitor IP comes from. false: the connection address only (no proxy in front).
+    // 'x-forwarded-for' or 'cf-connecting-ip': trust only that header (behind nginx/Caddy or Cloudflare).
+    // true: CF-Connecting-IP, then X-Forwarded-For, only if every request passes a proxy that OVERWRITES both.
+    // A header your proxy appends to (or passes through) lets visitors pick their own IP. See the README.
     'trust_proxy_headers' => false,
 
     // Optional postback sent when a click is blocked. Supports {placeholders} from the query string.

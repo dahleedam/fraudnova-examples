@@ -21,8 +21,10 @@ export default {
   // If the API fails: true sends the visitor to the money page, false to the safe page.
   fail_open: true,
 
-  // Set true ONLY when the gate sits behind Cloudflare or a reverse proxy you control.
-  // Otherwise visitors could fake their IP with a header.
+  // Where the visitor IP comes from. false: the connection address only (no proxy in front).
+  // 'x-forwarded-for' or 'cf-connecting-ip': trust only that header (behind nginx/Caddy or Cloudflare).
+  // true: CF-Connecting-IP, then X-Forwarded-For, only if every request passes a proxy that OVERWRITES both.
+  // A header your proxy appends to (or passes through) lets visitors pick their own IP. See the README.
   trust_proxy_headers: false,
 
   // Optional postback fired when a visitor is blocked. {clickid} etc. are filled from the query string.

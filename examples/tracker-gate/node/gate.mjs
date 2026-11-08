@@ -22,7 +22,7 @@ export const DEFAULTS = {
   cache_ttl: 86400, // seconds a scored IP is remembered (saves credits)
   timeout_ms: 2000, // how long to wait for the API
   fail_open: true, // on an API error: true = money page, false = safe page
-  trust_proxy_headers: false, // read the IP from CF-Connecting-IP / X-Forwarded-For
+  trust_proxy_headers: false, // false, true, 'cf-connecting-ip' or 'x-forwarded-for' (see the README)
   report_url: null, // optional postback URL, called only when a visitor is blocked
   log_file: null, // optional log file; null logs errors to the console only
   allowed_countries: [], // e.g. ['PK', 'IN']; empty = every country is allowed
@@ -45,6 +45,7 @@ function validate(config) {
   if (!Number.isInteger(config.timeout_ms) || config.timeout_ms <= 0) {
     throw new Error('config "timeout_ms" must be a positive integer');
   }
+  trustMode(config.trust_proxy_headers);
   const routes = config.routes;
   if (typeof routes !== 'object' || routes === null || !Object.hasOwn(routes, 'default')) {
     throw new Error('config "routes" must contain a "default" route');
@@ -79,40 +80,127 @@ export function evaluate(result, config) {
   return { decision: 'allow', score, reason: 'ok' };
 }
 
-// A dual-stack socket reports IPv4 visitors as ::ffff:203.0.113.5; use the plain IPv4 form
-// so the API call, the cache key and the log all agree.
-function normalizeIp(ip) {
-  const m = /^::ffff:(\d+\.\d+\.\d+\.\d+)$/i.exec(ip);
-  return m && isIP(m[1]) === 4 ? m[1] : ip;
+/**
+ * Normalizes trust_proxy_headers: false (connection address only), true (CF-Connecting-IP, then the
+ * first X-Forwarded-For entry), or one header name ('cf-connecting-ip' / 'x-forwarded-for', any case)
+ * meaning only that header is trusted. Anything else throws.
+ */
+export function trustMode(value) {
+  if (value === true || value === false) return value;
+  if (typeof value === 'string') {
+    const name = value.trim().toLowerCase();
+    if (name === 'cf-connecting-ip' || name === 'x-forwarded-for') return name;
+  }
+  throw new Error('config "trust_proxy_headers" must be false, true, \'cf-connecting-ip\' or \'x-forwarded-for\'');
+}
+
+/** The eight 16-bit groups of a valid IPv6 address (zone id dropped, embedded IPv4 expanded). */
+function ipv6Groups(ip) {
+  let text = ip.split('%')[0].toLowerCase();
+  const v4 = /(\d+\.\d+\.\d+\.\d+)$/.exec(text);
+  if (v4) {
+    const o = v4[1].split('.').map(Number);
+    text = text.slice(0, -v4[1].length) + `${((o[0] << 8) | o[1]).toString(16)}:${((o[2] << 8) | o[3]).toString(16)}`;
+  }
+  const [head, tail] = text.includes('::') ? text.split('::') : [text, null];
+  const left = head === '' ? [] : head.split(':');
+  const right = tail === null || tail === '' ? [] : tail.split(':');
+  const fill = tail === null ? [] : Array(8 - left.length - right.length).fill('0');
+  return [...left, ...fill, ...right].map((g) => parseInt(g, 16));
 }
 
 /**
- * The visitor IP: the connection address, or, when you sit behind a proxy you trust,
- * CF-Connecting-IP then the first X-Forwarded-For entry. Never a query parameter.
+ * A valid IP in canonical form, or null. An IPv4-mapped IPv6 address (::ffff:203.0.113.5 or
+ * ::ffff:cb00:7105, common behind dual-stack servers) becomes plain IPv4, so the API call,
+ * the cache key and the log all agree.
+ */
+function normalizeIp(raw) {
+  if (typeof raw !== 'string') return null;
+  const ip = raw.trim();
+  const version = isIP(ip);
+  if (version === 4) return ip;
+  if (version !== 6) return null;
+  const g = ipv6Groups(ip);
+  if (g.slice(0, 5).every((x) => x === 0) && g[5] === 0xffff) {
+    return [g[6] >> 8, g[6] & 255, g[7] >> 8, g[7] & 255].join('.');
+  }
+  return ip;
+}
+
+// Ranges that are never a real visitor: private, loopback, link-local, shared (carrier-grade NAT),
+// "this network" and reserved. Mirrors PHP's FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE.
+const V4_NON_PUBLIC = [
+  ['0.0.0.0', 8], ['10.0.0.0', 8], ['100.64.0.0', 10], ['127.0.0.0', 8], ['169.254.0.0', 16],
+  ['172.16.0.0', 12], ['192.168.0.0', 16], ['240.0.0.0', 4],
+].map(([base, bits]) => [v4ToInt(base), bits]);
+
+function v4ToInt(ip) {
+  return ip.split('.').reduce((acc, octet) => acc * 256 + Number(octet), 0);
+}
+
+/** False for private, loopback, link-local and reserved addresses. Expects a normalized IP. */
+export function isPublicIp(ip) {
+  const version = isIP(ip);
+  if (version === 4) {
+    const n = v4ToInt(ip);
+    return !V4_NON_PUBLIC.some(([base, bits]) => Math.floor(n / 2 ** (32 - bits)) === Math.floor(base / 2 ** (32 - bits)));
+  }
+  if (version !== 6) return false;
+  const g = ipv6Groups(ip);
+  if (g.slice(0, 7).every((x) => x === 0) && (g[7] === 0 || g[7] === 1)) return false; // :: and ::1
+  if ((g[0] & 0xfe00) === 0xfc00) return false; // fc00::/7 unique local
+  if ((g[0] & 0xffc0) === 0xfe80) return false; // fe80::/10 link-local
+  return true;
+}
+
+/**
+ * The visitor IP: the trusted header(s) first (see trustMode), then the connection address.
+ * Private, loopback, link-local and reserved addresses are skipped; null when no public
+ * address remains. Never a query parameter.
  */
 export function clientIp(headers, remoteAddress, trustProxyHeaders) {
+  const trust = trustMode(trustProxyHeaders);
   const candidates = [];
-  if (trustProxyHeaders) {
-    candidates.push(headers['cf-connecting-ip']);
+  if (trust === true || trust === 'cf-connecting-ip') candidates.push(headers['cf-connecting-ip']);
+  if (trust === true || trust === 'x-forwarded-for') {
     const forwarded = headers['x-forwarded-for'];
     if (typeof forwarded === 'string') candidates.push(forwarded.split(',')[0]);
   }
   candidates.push(remoteAddress);
 
   for (const candidate of candidates) {
-    if (typeof candidate !== 'string') continue;
-    const ip = candidate.trim();
-    if (isIP(ip) !== 0) return normalizeIp(ip);
+    const ip = normalizeIp(candidate);
+    if (ip !== null && isPublicIp(ip)) return ip;
   }
   return null;
 }
 
-/** Fills {name} placeholders from the query (single values only). */
+// Logged at most once per process: the hint is about the deployment, not about one click.
+let warnedBehindProxy = false;
+
+/** Test hook: lets the once-per-process proxy hint be logged again. */
+export function resetProxyWarning() {
+  warnedBehindProxy = false;
+}
+
+function warnIfBehindProxy(remoteAddress) {
+  if (warnedBehindProxy) return;
+  const ip = normalizeIp(remoteAddress);
+  if (ip !== null && !isPublicIp(ip)) {
+    warnedBehindProxy = true;
+    console.error('fraudnova-gate: the connection address is private, so the gate appears to sit behind a proxy and trust_proxy_headers is off; clicks are not scored (no_ip). See the README to set trust_proxy_headers.');
+  }
+}
+
+// A repeated query parameter uses its LAST value, the same as PHP's $_GET.
+function lastValue(query, name) {
+  const values = query.getAll(name);
+  return values.length === 0 ? null : values[values.length - 1];
+}
+
+/** Fills {name} placeholders from the query. */
 function substitute(template, query) {
-  return template.replace(/\{([A-Za-z0-9_]+)\}/g, (_, name) => {
-    const values = query.getAll(name);
-    return encodeURIComponent(values.length === 1 ? values[0] : '');
-  });
+  return template.replace(/\{([A-Za-z0-9_]+)\}/g, (_, name) => encodeURIComponent(lastValue(query, name) ?? ''));
 }
 
 /**
@@ -134,9 +222,8 @@ export function destination(template, query, decision) { // eslint-disable-line 
 
   const extra = [];
   for (const name of new Set(query.keys())) {
-    const values = query.getAll(name);
-    if (name === 'route' || values.length !== 1 || existing.has(name)) continue;
-    extra.push(`${encodeURIComponent(name)}=${encodeURIComponent(values[0])}`);
+    if (name === 'route' || existing.has(name)) continue;
+    extra.push(`${encodeURIComponent(name)}=${encodeURIComponent(lastValue(query, name))}`);
   }
 
   if (extra.length > 0) {
@@ -183,11 +270,11 @@ export function createGate(config, { client, reporter, now } = {}) {
     for (const [k, v] of cache) if (v.expiresAt <= t) cache.delete(k);
   }
 
-  async function decide(ip, userAgent, language) {
-    if (typeof ip !== 'string' || isIP(ip) === 0) {
+  async function decide(rawIp, userAgent, language) {
+    const ip = normalizeIp(rawIp);
+    if (ip === null || !isPublicIp(ip)) {
       return { decision: 'allow', score: null, reason: 'no_ip', cached: false };
     }
-    ip = normalizeIp(ip);
 
     const key = canonicalIp(ip);
     const hit = cache.get(key);
@@ -249,14 +336,16 @@ export function createGate(config, { client, reporter, now } = {}) {
     } catch {
       query = new URLSearchParams(); // a malformed request line such as "GET //" has no usable query
     }
-    const ip = clientIp(headers, remoteAddress, cfg.trust_proxy_headers);
+    const trust = trustMode(cfg.trust_proxy_headers);
+    const ip = clientIp(headers, remoteAddress, trust);
+    if (trust === false) warnIfBehindProxy(remoteAddress);
     // Prefetchers and link checkers send HEAD: never spend a credit, fire a postback,
     // or reveal the money page to them.
     const decision = verb === 'HEAD'
       ? { decision: 'block', score: null, reason: 'head', cached: false }
       : await decide(ip, headerValue(headers, 'user-agent'), headerValue(headers, 'accept-language'));
 
-    const asked = query.get('route');
+    const asked = lastValue(query, 'route');
     const routeName = asked !== null && Object.hasOwn(cfg.routes, asked) ? asked : 'default';
     const route = cfg.routes[routeName];
 

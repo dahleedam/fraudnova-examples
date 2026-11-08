@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { FraudNova } from '@fraudnova/sdk';
 import { makeHandler } from '../server.mjs';
-import { DEFAULTS, clientIp, createGate, destination, evaluate } from '../gate.mjs';
+import { DEFAULTS, clientIp, createGate, destination, evaluate, isPublicIp, resetProxyWarning, trustMode } from '../gate.mjs';
 
 const IP = '203.0.113.5';
 let queued;
@@ -265,22 +265,108 @@ test('report failure does not change the redirect', async () => {
 
 test('clientIp honours trusted headers', () => {
   const headers = { 'cf-connecting-ip': '203.0.113.9', 'x-forwarded-for': '198.51.100.7, 10.0.0.2' };
-  assert.equal(clientIp(headers, '10.0.0.1', false), '10.0.0.1');
-  assert.equal(clientIp(headers, '10.0.0.1', true), '203.0.113.9');
-  assert.equal(clientIp({ 'x-forwarded-for': headers['x-forwarded-for'] }, '10.0.0.1', true), '198.51.100.7');
-  assert.equal(clientIp({ 'x-forwarded-for': 'garbage' }, '10.0.0.1', true), '10.0.0.1');
+  assert.equal(clientIp(headers, '192.0.2.1', false), '192.0.2.1');
+  assert.equal(clientIp(headers, '192.0.2.1', true), '203.0.113.9');
+  assert.equal(clientIp({ 'x-forwarded-for': headers['x-forwarded-for'] }, '192.0.2.1', true), '198.51.100.7');
+  assert.equal(clientIp({ 'x-forwarded-for': 'garbage' }, '192.0.2.1', true), '192.0.2.1');
   assert.equal(clientIp({}, '', false), null);
+});
+
+test('clientIp trusts only the named header', () => {
+  const headers = { 'cf-connecting-ip': '203.0.113.9', 'x-forwarded-for': '198.51.100.7, 10.0.0.2' };
+  assert.equal(clientIp(headers, '192.0.2.1', 'cf-connecting-ip'), '203.0.113.9');
+  assert.equal(clientIp(headers, '192.0.2.1', 'CF-Connecting-IP'), '203.0.113.9');
+  assert.equal(clientIp(headers, '192.0.2.1', 'x-forwarded-for'), '198.51.100.7');
+  assert.equal(clientIp(headers, '192.0.2.1', 'X-Forwarded-For'), '198.51.100.7');
+  // The other header is ignored, so a spoofed one changes nothing; a missing trusted one falls back to the connection.
+  assert.equal(clientIp({ 'x-forwarded-for': '198.51.100.7' }, '192.0.2.1', 'cf-connecting-ip'), '192.0.2.1');
+  assert.equal(clientIp({ 'cf-connecting-ip': '203.0.113.9' }, '192.0.2.1', 'x-forwarded-for'), '192.0.2.1');
+});
+
+test('a named trusted header works through handle', async () => {
+  const headers = { 'cf-connecting-ip': '203.0.113.9', 'x-forwarded-for': '198.51.100.7' };
+  queued.push(ok(10));
+  await gate({ trust_proxy_headers: 'x-forwarded-for' }).handle(req({ headers, remoteAddress: '192.0.2.1' }));
+  assert.ok(calls[0].includes('ip=198.51.100.7'));
+
+  queued.push(ok(10));
+  await gate({ trust_proxy_headers: 'cf-connecting-ip' }).handle(req({ headers, remoteAddress: '192.0.2.1' }));
+  assert.ok(calls[1].includes('ip=203.0.113.9'));
+});
+
+for (const [name, value] of Object.entries({ 'other header': 'x-real-ip', 'empty string': '', 'number 1': 1, array: ['cf-connecting-ip'] })) {
+  test(`bad trust_proxy_headers throws at construction: ${name}`, () => {
+    assert.throws(() => gate({ trust_proxy_headers: value }), /trust_proxy_headers/);
+  });
+}
+
+test('trustMode normalizes case', () => {
+  assert.equal(trustMode('  X-Forwarded-For '), 'x-forwarded-for');
+  assert.equal(trustMode(true), true);
+  assert.equal(trustMode(false), false);
+});
+
+const nonPublic = {
+  '10/8': '10.1.2.3', '172.16/12': '172.20.0.1', '192.168/16': '192.168.1.1', '127/8': '127.0.0.1',
+  '169.254/16': '169.254.10.10', '0/8': '0.1.2.3', '100.64/10': '100.100.1.1', '::1': '::1',
+  'fc00::/7': 'fd12:3456::1', 'fe80::/10': 'fe80::1', 'mapped private': '::ffff:192.168.1.1',
+  'mapped loopback': '::ffff:127.0.0.1', 'mapped private, hex form': '::ffff:c0a8:101',
+};
+for (const [name, ip] of Object.entries(nonPublic)) {
+  test(`private or reserved address is never scored: ${name}`, async () => {
+    assert.equal(clientIp({}, ip, false), null);
+    const d = await gate().decide(ip, null, null);
+    assert.equal(d.reason, 'no_ip');
+    assert.equal(d.decision, 'allow');
+    assert.equal(calls.length, 0);
+  });
+}
+
+test('100.64/10 boundaries', () => {
+  assert.equal(isPublicIp('100.127.255.255'), false);
+  assert.equal(isPublicIp('100.63.255.255'), true);
+  assert.equal(isPublicIp('100.128.0.0'), true);
+  assert.equal(isPublicIp('172.15.255.255'), true);
+  assert.equal(isPublicIp('172.32.0.0'), true);
+  assert.equal(isPublicIp('2001:db8::1'), true);
+});
+
+test('a private header falls through to the next candidate', () => {
+  const headers = { 'cf-connecting-ip': '10.0.0.5', 'x-forwarded-for': '198.51.100.7' };
+  assert.equal(clientIp(headers, '192.0.2.1', true), '198.51.100.7');
+  assert.equal(clientIp(headers, '192.0.2.1', 'cf-connecting-ip'), '192.0.2.1');
+  assert.equal(clientIp({ 'x-forwarded-for': '192.168.0.9' }, '10.0.0.1', 'x-forwarded-for'), null);
+});
+
+test('a private connection without trust is no_ip and logs one hint per process', async () => {
+  resetProxyWarning();
+  const headers = { 'cf-connecting-ip': '203.0.113.9' };
+  const g = gate();
+  const r = await g.handle(req({ headers, remoteAddress: '10.0.0.1' }));
+  await g.handle(req({ headers, remoteAddress: '10.0.0.2' }));
+  await gate().handle(req({ headers, remoteAddress: '10.0.0.3' }));
+  assert.equal(r.headers.Location, 'https://lp.example/?clickid=abc');
+  assert.equal(calls.length, 0);
+  assert.equal(errors.filter((e) => e.includes('trust_proxy_headers is off')).length, 1);
+});
+
+test('a private connection with trust does not log the hint', async () => {
+  resetProxyWarning();
+  queued.push(ok(10));
+  await gate({ trust_proxy_headers: 'cf-connecting-ip' }).handle(req({ headers: { 'cf-connecting-ip': '203.0.113.9' }, remoteAddress: '10.0.0.1' }));
+  assert.ok(calls[0].includes('ip=203.0.113.9'));
+  assert.equal(errors.length, 0);
 });
 
 test('trust_proxy_headers works through handle', async () => {
   const headers = { 'cf-connecting-ip': '203.0.113.9' };
   queued.push(ok(10));
-  await gate({ trust_proxy_headers: true }).handle(req({ headers, remoteAddress: '10.0.0.1' }));
+  await gate({ trust_proxy_headers: true }).handle(req({ headers, remoteAddress: '192.0.2.1' }));
   assert.ok(calls[0].includes('ip=203.0.113.9'));
 
   queued.push(ok(10));
-  await gate().handle(req({ headers, remoteAddress: '10.0.0.1' }));
-  assert.ok(calls[1].includes('ip=10.0.0.1'));
+  await gate().handle(req({ headers, remoteAddress: '192.0.2.1' }));
+  assert.ok(calls[1].includes('ip=192.0.2.1'));
 });
 
 test('the visitor IP is never taken from the query string', async () => {
@@ -338,9 +424,13 @@ test('destination keeps the fragment last', () => {
   assert.equal(destination('https://lp.example/?a=1#top', q('sub1=x'), {}), 'https://lp.example/?a=1&sub1=x#top');
 });
 
-test('repeated query values are skipped and placeholders become empty', () => {
+test('a repeated query parameter uses the last value, like PHP', async () => {
   const q = new URLSearchParams('clickid=a&clickid=b&sub1=x&sub1=y');
-  assert.equal(destination('https://lp.example/?clickid={clickid}', q, {}), 'https://lp.example/?clickid=');
+  assert.equal(destination('https://lp.example/?clickid={clickid}', q, {}), 'https://lp.example/?clickid=b&sub1=y');
+
+  queued.push(ok(10));
+  const r = await gate().handle(req({ url: '/gate?clickid=a&clickid=b&sub1=x&sub1=y' }));
+  assert.equal(r.headers.Location, 'https://lp.example/?clickid=b&sub1=y');
 });
 
 test('HEAD goes to the safe URL without calling the API or reporting', async () => {
@@ -435,7 +525,7 @@ test('expired cache entries are pruned', async () => {
   let t = 0;
   const g = gate({ cache_ttl: 1 }, { now: () => t });
   for (let i = 0; i < 999; i++) queued.push(ok(1));
-  for (let i = 0; i < 999; i++) await g.decide(`10.${i >> 8}.${i & 255}.1`, null, null);
+  for (let i = 0; i < 999; i++) await g.decide(`198.${i >> 8}.${i & 255}.1`, null, null);
   t += 5000;
   queued.push(ok(1), ok(1));
   await g.decide('192.0.2.1', null, null); // 1,000th insert triggers the sweep
