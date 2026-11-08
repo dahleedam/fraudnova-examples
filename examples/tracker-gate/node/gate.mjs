@@ -79,6 +79,13 @@ export function evaluate(result, config) {
   return { decision: 'allow', score, reason: 'ok' };
 }
 
+// A dual-stack socket reports IPv4 visitors as ::ffff:203.0.113.5; use the plain IPv4 form
+// so the API call, the cache key and the log all agree.
+function normalizeIp(ip) {
+  const m = /^::ffff:(\d+\.\d+\.\d+\.\d+)$/i.exec(ip);
+  return m && isIP(m[1]) === 4 ? m[1] : ip;
+}
+
 /**
  * The visitor IP: the connection address, or, when you sit behind a proxy you trust,
  * CF-Connecting-IP then the first X-Forwarded-For entry. Never a query parameter.
@@ -95,7 +102,7 @@ export function clientIp(headers, remoteAddress, trustProxyHeaders) {
   for (const candidate of candidates) {
     if (typeof candidate !== 'string') continue;
     const ip = candidate.trim();
-    if (isIP(ip) !== 0) return ip;
+    if (isIP(ip) !== 0) return normalizeIp(ip);
   }
   return null;
 }
@@ -108,15 +115,35 @@ function substitute(template, query) {
   });
 }
 
-/** Fills placeholders, then appends query params the URL does not already carry. Fragment stays last. */
+/**
+ * Fills placeholders, then appends query params the URL does not already carry.
+ * Works on the string, so the rest of your URL is left exactly as you wrote it. Fragment stays last.
+ */
 export function destination(template, query, decision) { // eslint-disable-line no-unused-vars
-  const url = new URL(substitute(template, query));
+  let url = substitute(template, query);
+
+  let fragment = '';
+  const hashAt = url.indexOf('#');
+  if (hashAt !== -1) {
+    fragment = url.slice(hashAt);
+    url = url.slice(0, hashAt);
+  }
+
+  const queryAt = url.indexOf('?');
+  const existing = new URLSearchParams(queryAt === -1 ? '' : url.slice(queryAt + 1));
+
+  const extra = [];
   for (const name of new Set(query.keys())) {
     const values = query.getAll(name);
-    if (name === 'route' || values.length !== 1 || url.searchParams.has(name)) continue;
-    url.searchParams.append(name, values[0]);
+    if (name === 'route' || values.length !== 1 || existing.has(name)) continue;
+    extra.push(`${encodeURIComponent(name)}=${encodeURIComponent(values[0])}`);
   }
-  return url.toString();
+
+  if (extra.length > 0) {
+    const glue = queryAt === -1 ? '?' : (url.endsWith('?') || url.endsWith('&') ? '' : '&');
+    url += glue + extra.join('&');
+  }
+  return url + fragment;
 }
 
 // Same IP, different spelling (IPv6 case or zero-compression): one cache entry.
@@ -142,15 +169,25 @@ export function createGate(config, { client, reporter, now } = {}) {
   }
   validate(cfg);
 
+  // The SDK does not retry unless you pass it a RetryPolicy, so timeout_ms bounds the whole call.
   const sdk = client ?? new FraudNova(cfg.api_key, { timeout: cfg.timeout_ms });
   const report = reporter ?? ((url) => fetch(url, { signal: AbortSignal.timeout(1000) }).catch(() => {}));
   const clock = now ?? Date.now;
   const cache = new Map(); // canonical ip -> { expiresAt, result }
+  let inserts = 0;
+
+  // Expired entries are only dropped when looked up again, so sweep them now and then
+  // (every 1,000 inserts, or whenever the cache passes 50,000 entries) to keep memory bounded.
+  function prune() {
+    const t = clock();
+    for (const [k, v] of cache) if (v.expiresAt <= t) cache.delete(k);
+  }
 
   async function decide(ip, userAgent, language) {
-    if (ip === null || ip === undefined || isIP(ip) === 0) {
+    if (typeof ip !== 'string' || isIP(ip) === 0) {
       return { decision: 'allow', score: null, reason: 'no_ip', cached: false };
     }
+    ip = normalizeIp(ip);
 
     const key = canonicalIp(ip);
     const hit = cache.get(key);
@@ -177,6 +214,7 @@ export function createGate(config, { client, reporter, now } = {}) {
         active_vpn: r.activeVpn, active_tor: r.activeTor, recent_abuse: r.recentAbuse,
         bot_status: r.botStatus, country_code: r.countryCode,
       };
+      if (++inserts % 1000 === 0 || cache.size > 50_000) prune();
       cache.set(key, { expiresAt: clock() + cfg.cache_ttl * 1000, result });
     }
 
@@ -205,7 +243,12 @@ export function createGate(config, { client, reporter, now } = {}) {
       return { status: 405, headers: { Allow: 'GET, HEAD', 'Cache-Control': 'no-store' }, body: '' };
     }
 
-    const query = new URL(url, 'http://gate.invalid').searchParams;
+    let query;
+    try {
+      query = new URL(url, 'http://gate.invalid').searchParams;
+    } catch {
+      query = new URLSearchParams(); // a malformed request line such as "GET //" has no usable query
+    }
     const ip = clientIp(headers, remoteAddress, cfg.trust_proxy_headers);
     // Prefetchers and link checkers send HEAD: never spend a credit, fire a postback,
     // or reveal the money page to them.
@@ -218,7 +261,16 @@ export function createGate(config, { client, reporter, now } = {}) {
     const route = cfg.routes[routeName];
 
     const toMoney = verb !== 'HEAD' && (decision.decision === 'allow' || (decision.decision === 'error' && cfg.fail_open));
-    const location = destination(route[toMoney ? 'money' : 'safe'], query, decision);
+    const target = route[toMoney ? 'money' : 'safe'];
+    let location;
+    try {
+      location = destination(target, query, decision);
+      // e.g. a placeholder in the host that expanded to nothing leaves no host behind.
+      if (!/^https?:\/\/[^\s/?#]+/i.test(location)) throw new Error('no host');
+      new URL(location);
+    } catch {
+      location = route.safe;
+    }
 
     if (decision.decision === 'block' && cfg.report_url) {
       try {

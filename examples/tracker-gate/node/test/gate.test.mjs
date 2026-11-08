@@ -4,6 +4,7 @@ import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { FraudNova } from '@fraudnova/sdk';
+import { makeHandler } from '../server.mjs';
 import { DEFAULTS, clientIp, createGate, destination, evaluate } from '../gate.mjs';
 
 const IP = '203.0.113.5';
@@ -394,3 +395,66 @@ for (const [name, override] of Object.entries(badConfigs)) {
     }
   });
 }
+
+test('a malformed request URL still gets a 302', async () => {
+  queued.push(ok(10));
+  const r = await gate().handle(req({ url: '//' }));
+  assert.equal(r.status, 302);
+  assert.ok(r.headers.Location.startsWith('https://lp.example/'));
+});
+
+test('a placeholder in the host position does not throw', async () => {
+  queued.push(ok(10));
+  const g = gate({ routes: { default: { money: 'https://{clickid}.lp.example/', safe: 'https://safe.example/' } } });
+  const r = await g.handle(req({ url: '/gate?clickid=' }));
+  assert.equal(r.status, 302);
+  const broken = gate({ routes: { default: { money: 'https://{host}/x', safe: 'https://safe.example/' } } });
+  queued.push(ok(10));
+  assert.equal((await broken.handle(req({ url: '/gate' }))).headers.Location, 'https://safe.example/');
+});
+
+test('IPv4-mapped IPv6 uses the plain IPv4 form', async () => {
+  assert.equal(clientIp({}, '::ffff:203.0.113.5', false), '203.0.113.5');
+  assert.equal(clientIp({ 'cf-connecting-ip': '::FFFF:198.51.100.7' }, '10.0.0.1', true), '198.51.100.7');
+  queued.push(ok(10));
+  const g = gate();
+  await g.decide('::ffff:203.0.113.5', null, null);
+  const d = await g.decide(IP, null, null);
+  assert.equal(d.cached, true);
+  assert.ok(calls[0].includes(`ip=${IP}`));
+});
+
+test('the destination template is not re-serialised', () => {
+  const q = new URLSearchParams('sub1=x');
+  assert.equal(destination('https://lp.example/path?x=a%20b', q, {}), 'https://lp.example/path?x=a%20b&sub1=x');
+  assert.equal(destination('https://lp.example', q, {}), 'https://lp.example?sub1=x');
+  assert.equal(destination('https://lp.example/p?', q, {}), 'https://lp.example/p?sub1=x');
+});
+
+test('expired cache entries are pruned', async () => {
+  let t = 0;
+  const g = gate({ cache_ttl: 1 }, { now: () => t });
+  for (let i = 0; i < 999; i++) queued.push(ok(1));
+  for (let i = 0; i < 999; i++) await g.decide(`10.${i >> 8}.${i & 255}.1`, null, null);
+  t += 5000;
+  queued.push(ok(1), ok(1));
+  await g.decide('192.0.2.1', null, null); // 1,000th insert triggers the sweep
+  assert.equal(calls.length, 1000);
+});
+
+test('server handler never throws and falls back to the safe page', async () => {
+  const written = [];
+  const res = { writeHead: (...a) => written.push(a), end: () => {} };
+  const req0 = { method: 'GET', url: '/', headers: {}, socket: { remoteAddress: '203.0.113.5' } };
+  await makeHandler({ handle: async () => { throw new Error('boom'); } }, 'https://safe.example/')(req0, res);
+  assert.equal(written[0][0], 302);
+  assert.equal(written[0][1].Location, 'https://safe.example/');
+  assert.equal(written[0][1]['Cache-Control'], 'no-store');
+  assert.equal(errors.length, 1);
+
+  queued.push(ok(10));
+  written.length = 0;
+  await makeHandler(gate(), 'https://safe.example/')(req0, res);
+  assert.equal(written[0][0], 302);
+  assert.ok(written[0][1].Location.startsWith('https://lp.example/'));
+});
