@@ -175,8 +175,8 @@ final class Gate
 
         $ip = self::clientIp($server, (bool) $this->config['trust_proxy_headers']);
         $decision = $method === 'HEAD'
-            // Prefetchers and link checkers send HEAD: never spend a credit or fire a postback on them.
-            ? ['decision' => 'allow', 'score' => null, 'reason' => 'head', 'cached' => false]
+            // Prefetchers and link checkers send HEAD: no credit, no postback, and they only ever see the safe URL.
+            ? ['decision' => 'block', 'score' => null, 'reason' => 'head', 'cached' => false]
             : $this->decide($ip, $this->header($server, 'HTTP_USER_AGENT'), $this->header($server, 'HTTP_ACCEPT_LANGUAGE'));
 
         $routeName = isset($query['route']) && is_string($query['route']) && isset($this->config['routes'][$query['route']])
@@ -187,7 +187,7 @@ final class Gate
         $toMoney = $decision['decision'] === 'allow' || ($decision['decision'] === 'error' && $this->config['fail_open']);
         $location = self::destination((string) $route[$toMoney ? 'money' : 'safe'], $query, $decision);
 
-        if ($decision['decision'] === 'block' && is_string($this->config['report_url']) && $this->config['report_url'] !== '') {
+        if ($decision['decision'] === 'block' && $decision['reason'] !== 'head' && is_string($this->config['report_url']) && $this->config['report_url'] !== '') {
             try {
                 ($this->reporter)(self::substitute($this->config['report_url'], $query));
             } catch (\Throwable) {

@@ -439,10 +439,10 @@ final class GateTest extends TestCase
         $r = $gate->handle(['REQUEST_METHOD' => 'HEAD', 'REMOTE_ADDR' => '203.0.113.5'], ['clickid' => 'abc']);
 
         $this->assertSame(302, $r['status']);
-        $this->assertSame('https://lp.example/?clickid=abc', $r['headers']['Location']);
+        $this->assertSame('https://safe.example/?clickid=abc', $r['headers']['Location']);
         $this->assertCount(0, $this->stub->requests);
         $this->assertSame([], $reported);
-        $this->assertStringContainsString(' allow - head default ', (string) file_get_contents($log));
+        $this->assertStringContainsString(' block - head default ', (string) file_get_contents($log));
     }
 
     public function test_post_response_carries_no_store(): void
