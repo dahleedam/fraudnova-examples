@@ -117,7 +117,8 @@ final class Gate
     /** @return array{decision:string, score:?int, reason:string, cached:bool, error?:string} */
     public function decide(?string $ip, ?string $userAgent, ?string $language): array
     {
-        if ($ip === null || filter_var($ip, FILTER_VALIDATE_IP) === false) {
+        $ip = $ip === null ? null : self::normalizeIp($ip);
+        if ($ip === null) {
             return ['decision' => 'allow', 'score' => null, 'reason' => 'no_ip', 'cached' => false];
         }
 
@@ -217,9 +218,9 @@ final class Gate
             if (! is_string($candidate)) {
                 continue;
             }
-            $candidate = trim($candidate);
-            if (filter_var($candidate, FILTER_VALIDATE_IP) !== false) {
-                return $candidate;
+            $ip = self::normalizeIp($candidate);
+            if ($ip !== null) {
+                return $ip;
             }
         }
 
@@ -323,6 +324,28 @@ final class Gate
         $text = $packed === false ? false : inet_ntop($packed);
 
         return $text === false ? $ip : $text;
+    }
+
+    /**
+     * Returns a valid IP in canonical text form, or null. An IPv4-mapped IPv6 address
+     * (::ffff:203.0.113.5, common behind dual-stack servers) becomes plain IPv4; a ::ffff: prefix
+     * followed by anything that is not a valid IPv4 is rejected.
+     */
+    private static function normalizeIp(string $ip): ?string
+    {
+        $ip = trim($ip);
+        if (filter_var($ip, FILTER_VALIDATE_IP) === false) {
+            return null;
+        }
+
+        $ip = self::canonicalIp($ip);
+        if (stripos($ip, '::ffff:') === 0) {
+            $rest = substr($ip, 7);
+
+            return filter_var($rest, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) !== false ? $rest : null;
+        }
+
+        return $ip;
     }
 
     private function cachePath(string $ip): string

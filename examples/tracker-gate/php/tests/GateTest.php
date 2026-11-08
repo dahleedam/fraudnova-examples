@@ -429,6 +429,21 @@ final class GateTest extends TestCase
         $this->assertCount(1, $this->stub->requests);
     }
 
+    public function test_ipv4_mapped_ipv6_is_unmapped(): void
+    {
+        $this->assertSame('203.0.113.5', Gate::clientIp(['REMOTE_ADDR' => '::ffff:203.0.113.5'], false));
+        $this->assertNull(Gate::clientIp(['REMOTE_ADDR' => '::ffff:999.1.1.1'], false));
+
+        $this->stub->queue[] = $this->ok(10);
+        $gate = $this->gate();
+        $gate->decide('::ffff:203.0.113.5', null, null);
+        $d = $gate->decide('203.0.113.5', null, null);
+
+        $this->assertTrue($d['cached']);
+        $this->assertCount(1, $this->stub->requests);
+        $this->assertStringContainsString('ip=203.0.113.5', $this->stub->requests[0]->getUri()->getQuery());
+    }
+
     public function test_head_request_does_not_call_api_or_report(): void
     {
         $reported = [];
