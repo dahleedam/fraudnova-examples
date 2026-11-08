@@ -19,7 +19,8 @@ return [
     // Seconds a scored IP is remembered, so repeat clicks cost no credit.
     'cache_ttl' => 86400,
 
-    // Where cached results are stored (must be writable and not web-readable).
+    // Where cached results are stored (must be writable and not web-readable;
+    // cache/.htaccess covers Apache only, nginx users must deny /cache themselves).
     'cache_dir' => __DIR__.'/cache',
 
     // Give up on the API after this many milliseconds.
@@ -29,9 +30,11 @@ return [
     'fail_open' => true,
 
     // Read the visitor IP from CF-Connecting-IP / X-Forwarded-For. Enable only behind a proxy you control.
+    // X-Forwarded-For is trusted only when your proxy overwrites it rather than appends to it.
     'trust_proxy_headers' => false,
 
     // Optional postback sent when a click is blocked. Supports {placeholders} from the query string.
+    // It runs synchronously, capped at 1 second, before the visitor is redirected.
     'report_url' => null,
 
     // Optional file that gets one log line per click.

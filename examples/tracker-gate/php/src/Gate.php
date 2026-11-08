@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace FraudNovaGate;
 
 use FraudNova\Client;
+use FraudNova\Exception\ApiException;
 use FraudNova\IpOptions;
 use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\Psr7\HttpFactory;
@@ -13,6 +14,9 @@ use GuzzleHttp\Psr7\HttpFactory;
  * Scores the visitor IP with FraudNova and redirects to a money page or a safe page.
  *
  * Fails open by default: if the API cannot be reached, the visitor goes to the money page.
+ * A broken configuration is the opposite: it throws at construction, so it is never silently fail-open.
+ *
+ * Decision reasons: score, flag:<name>, country, ok, error, no_ip, head.
  */
 final class Gate
 {
@@ -47,15 +51,47 @@ final class Gate
     public function __construct(array $config, private readonly Client $client, ?\Closure $reporter = null, ?\Closure $clock = null)
     {
         $this->config = array_replace(self::DEFAULTS, $config);
-
-        if (! isset($this->config['routes']['default']['money'], $this->config['routes']['default']['safe'])) {
-            throw new \InvalidArgumentException('config "routes" must contain a "default" route with "money" and "safe" URLs');
-        }
+        self::validate($this->config);
 
         $this->reporter = $reporter ?? static function (string $url): void {
             (new GuzzleClient(['timeout' => 1, 'connect_timeout' => 1, 'http_errors' => false]))->get($url);
         };
         $this->clock = $clock ?? static fn (): int => time();
+    }
+
+    /** The cache directory used when the config does not set one. */
+    public static function defaultCacheDir(): string
+    {
+        return self::DEFAULTS['cache_dir'];
+    }
+
+    /** @param array<string,mixed> $config */
+    private static function validate(array $config): void
+    {
+        $key = $config['api_key'];
+        if (! is_string($key) || trim($key) === '' || $key === 'fn_your_api_key_here') {
+            throw new \InvalidArgumentException('config "api_key" is missing or still the placeholder; set your FraudNova API key (or FRAUDNOVA_API_KEY)');
+        }
+        if (! is_int($config['strictness']) || $config['strictness'] < 0 || $config['strictness'] > 3) {
+            throw new \InvalidArgumentException('config "strictness" must be an integer from 0 to 3');
+        }
+        if (! is_int($config['threshold']) || $config['threshold'] < 0 || $config['threshold'] > 100) {
+            throw new \InvalidArgumentException('config "threshold" must be an integer from 0 to 100');
+        }
+        if (! is_int($config['timeout_ms']) || $config['timeout_ms'] <= 0) {
+            throw new \InvalidArgumentException('config "timeout_ms" must be a positive integer');
+        }
+        if (! is_array($config['routes']) || ! isset($config['routes']['default'])) {
+            throw new \InvalidArgumentException('config "routes" must contain a "default" route');
+        }
+        foreach ($config['routes'] as $name => $route) {
+            foreach (['money', 'safe'] as $kind) {
+                $url = is_array($route) ? ($route[$kind] ?? null) : null;
+                if (! is_string($url) || $url === '' || preg_match('#^https?://[^\s/]+#i', $url) !== 1) {
+                    throw new \InvalidArgumentException(sprintf('config route "%s" needs an absolute http(s) "%s" URL', $name, $kind));
+                }
+            }
+        }
     }
 
     /**
@@ -72,11 +108,13 @@ final class Gate
         if ($apiKey === '') {
             $apiKey = (string) getenv('FRAUDNOVA_API_KEY');
         }
+        $config['api_key'] = $apiKey;
+        self::validate(array_replace(self::DEFAULTS, $config));
 
         return new self($config, new Client($apiKey, $http, $factory, $factory), null, null);
     }
 
-    /** @return array{decision:string, score:?int, reason:string, cached:bool} */
+    /** @return array{decision:string, score:?int, reason:string, cached:bool, error?:string} */
     public function decide(?string $ip, ?string $userAgent, ?string $language): array
     {
         if ($ip === null || filter_var($ip, FILTER_VALIDATE_IP) === false) {
@@ -93,9 +131,15 @@ final class Gate
                     userAgent: $userAgent,
                     userLanguage: $language,
                 ));
-            } catch (\Throwable) {
+            } catch (\Throwable $e) {
                 // Any SDK failure (402/429/503, timeout, bad response) is handled the same way.
-                return ['decision' => 'error', 'score' => null, 'reason' => 'error', 'cached' => false];
+                // Only the class name and status are recorded: the message could echo the key or a URL.
+                $error = (new \ReflectionClass($e))->getShortName();
+                if ($e instanceof ApiException) {
+                    $error .= ' HTTP '.$e->statusCode();
+                }
+
+                return ['decision' => 'error', 'score' => null, 'reason' => 'error', 'cached' => false, 'error' => $error];
             }
 
             $result = [
@@ -130,7 +174,10 @@ final class Gate
         }
 
         $ip = self::clientIp($server, (bool) $this->config['trust_proxy_headers']);
-        $decision = $this->decide($ip, $this->header($server, 'HTTP_USER_AGENT'), $this->header($server, 'HTTP_ACCEPT_LANGUAGE'));
+        $decision = $method === 'HEAD'
+            // Prefetchers and link checkers send HEAD: never spend a credit or fire a postback on them.
+            ? ['decision' => 'allow', 'score' => null, 'reason' => 'head', 'cached' => false]
+            : $this->decide($ip, $this->header($server, 'HTTP_USER_AGENT'), $this->header($server, 'HTTP_ACCEPT_LANGUAGE'));
 
         $routeName = isset($query['route']) && is_string($query['route']) && isset($this->config['routes'][$query['route']])
             ? $query['route']
@@ -217,6 +264,7 @@ final class Gate
      */
     public static function destination(string $template, array $query, array $decision): string
     {
+        // $decision is unused; kept for interface symmetry with the other decision-aware methods.
         $url = self::substitute($template, $query);
 
         $fragment = '';
@@ -269,9 +317,17 @@ final class Gate
         return $value === '' ? null : $value;
     }
 
+    private static function canonicalIp(string $ip): string
+    {
+        $packed = @inet_pton($ip);
+        $text = $packed === false ? false : inet_ntop($packed);
+
+        return $text === false ? $ip : $text;
+    }
+
     private function cachePath(string $ip): string
     {
-        return rtrim((string) $this->config['cache_dir'], '/').'/'.hash('sha256', $ip).'.json';
+        return rtrim((string) $this->config['cache_dir'], '/').'/'.hash('sha256', self::canonicalIp($ip)).'.json';
     }
 
     /** @return ?array<string,mixed> */
@@ -314,17 +370,21 @@ final class Gate
         }
     }
 
-    /** @param array{decision:string, score:?int, reason:string, cached:bool} $decision */
+    /** @param array{decision:string, score:?int, reason:string, cached:bool, error?:string} $decision */
     private function log(?string $ip, array $decision, string $route): void
     {
         $file = $this->config['log_file'];
         if (! is_string($file) || $file === '') {
+            if (isset($decision['error'])) {
+                error_log('fraudnova-gate: lookup failed ('.$decision['error'].'), '.$decision['decision'].' for '.($ip ?? '-'));
+            }
+
             return;
         }
         try {
             $line = implode(' ', [
                 date('c'), $ip ?? '-', $decision['decision'], $decision['score'] ?? '-', $decision['reason'], $route, $decision['cached'] ? 'cached' : 'live',
-            ]).PHP_EOL;
+            ]).(isset($decision['error']) ? ' error='.$decision['error'] : '').PHP_EOL;
             @file_put_contents($file, $line, FILE_APPEND | LOCK_EX);
         } catch (\Throwable) {
         }
