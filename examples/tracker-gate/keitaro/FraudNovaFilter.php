@@ -51,10 +51,21 @@ class fraudnova extends AbstractFilter
             (string) $rawClick->getIpString(),
             $rawClick->getUserAgent(),
             $rawClick->getLanguage(),
-            (int) ($filter->getPayload() ?: 75)
+            self::thresholdFrom($filter->getPayload())
         );
 
         return $filter->getMode() == StreamFilter::ACCEPT ? $risky : !$risky;
+    }
+
+    /** The filter value as a threshold: a whole number from 1 to 100, otherwise 75. */
+    public static function thresholdFrom($payload)
+    {
+        $value = trim((string) $payload);
+        if ($value !== '' && ctype_digit($value) && (int) $value >= 1 && (int) $value <= 100) {
+            return (int) $value;
+        }
+
+        return 75;
     }
 
     /**

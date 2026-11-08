@@ -24,12 +24,45 @@ namespace Traffic\Model {
     {
         const ACCEPT = 'accept';
         const REJECT = 'reject';
+
+        private $mode;
+        private $payload;
+
+        public function __construct($mode = 'reject', $payload = '')
+        {
+            $this->mode = $mode;
+            $this->payload = $payload;
+        }
+
+        public function getMode()
+        {
+            return $this->mode;
+        }
+
+        public function getPayload()
+        {
+            return $this->payload;
+        }
     }
 }
 
 namespace Traffic {
     class RawClick
     {
+        public function getIpString()
+        {
+            return '198.51.100.20';
+        }
+
+        public function getUserAgent()
+        {
+            return 'UA';
+        }
+
+        public function getLanguage()
+        {
+            return 'en';
+        }
     }
 }
 
@@ -98,6 +131,30 @@ namespace {
 
     // No IP at all: nothing to score.
     check(fraudnova::isRisky('', null, null, 75, $reply($high)) === false, 'empty IP fails open');
+
+    check(fraudnova::thresholdFrom('') === 75, 'empty value is 75');
+    check(fraudnova::thresholdFrom('abc') === 75, 'text is 75');
+    check(fraudnova::thresholdFrom('0') === 75, 'zero is 75');
+    check(fraudnova::thresholdFrom('150') === 75, 'over 100 is 75');
+    check(fraudnova::thresholdFrom(null) === 75, 'null is 75');
+    check(fraudnova::thresholdFrom(' 60 ') === 60, '60 is 60');
+
+    // isPass(): pre-seed the cache so no HTTP call is made.
+    $seed = function (array $data) use ($cache) {
+        @mkdir($cache, 0700, true);
+        file_put_contents($cache . '/' . sha1('198.51.100.20') . '.json', json_encode(array('at' => time(), 'data' => $data)));
+    };
+    $click = new \Traffic\RawClick();
+    $reject = new \Traffic\Model\StreamFilter('reject', '75');
+    $accept = new \Traffic\Model\StreamFilter('accept', '75');
+    $filter = new fraudnova();
+
+    $seed(array('fraud_score' => 90));
+    check($filter->isPass($reject, $click) === false, 'reject + risky blocks');
+    check($filter->isPass($accept, $click) === true, 'accept + risky passes');
+    $seed(array('fraud_score' => 5));
+    check($filter->isPass($reject, $click) === true, 'reject + clean passes');
+    check($filter->isPass($accept, $click) === false, 'accept + clean blocks');
 
     array_map('unlink', glob($cache . '/*') ?: array());
     @rmdir($cache);

@@ -14,7 +14,7 @@ Keitaro's documentation describes where filters live and what a filter class loo
 
 ## Use it
 
-Add the filter to a stream and pick a mode. The value is the fraud-score threshold; leave it empty for **75**.
+Add the filter to a stream and pick a mode. The value is the fraud-score threshold; leave it empty for **75**. An empty, zero, non-numeric or over-100 value also means 75, so a typo never blocks all traffic.
 
 | Mode | Passes | Typical use |
 | --- | --- | --- |
@@ -30,6 +30,8 @@ A click counts as **risky** when the fraud score is at or above the value, or wh
 - **Fail open.** An API error, timeout, non-200 answer or unexpected response means the click is treated as clean. Failed lookups are never cached.
 - **Cache.** A scored IP is remembered for 24 hours (`CACHE_TTL`) in `sys_get_temp_dir()/fraudnova-filter/`, one small file per IP, so repeat clicks cost no credit. The cached data is re-checked against the current threshold. Set `FRAUDNOVA_FILTER_CACHE` to move the cache directory.
 - **Cost.** One credit per new IP per day. The same IP can be evaluated by several streams without extra lookups thanks to the cache. Your key's rate limit and in-flight cap apply; see the [API docs](https://fraudnova.com/docs).
+- **Strictness.** The filter always sends `strictness=1`; it is not configurable here.
+- **Shared hosts.** The default cache path under the system temp directory is predictable. On a shared host set `FRAUDNOVA_FILTER_CACHE` to a directory only your user can read.
 - **Timeout.** 2 seconds (`TIMEOUT`), with a 1 second connect timeout.
 
 Full click-by-click guides: https://fraudnova.com/guides/fraud-filtering-for-affiliate-trackers
