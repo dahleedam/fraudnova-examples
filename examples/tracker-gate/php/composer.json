@@ -1,0 +1,27 @@
+{
+    "name": "fraudnova/tracker-gate",
+    "description": "Redirect gate for affiliate trackers: scores the visitor IP with FraudNova and sends the click to a money page or a safe page.",
+    "type": "project",
+    "license": "MIT",
+    "require": {
+        "php": "^8.2",
+        "fraudnova/fraudnova-php": "^1.0",
+        "guzzlehttp/guzzle": "^7.8"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "FraudNovaGate\\": "./"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "FraudNovaGate\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit"
+    }
+}
