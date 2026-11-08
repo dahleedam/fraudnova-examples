@@ -2,10 +2,8 @@
 
 declare(strict_types=1);
 
-// Entry point: point your tracker's redirect at https://your-domain/go.php?clickid={clickid}
-// (Named go.php, not gate.php, because gate.php and Gate.php collide on case-insensitive file systems.)
+// Entry point: point your tracker's redirect at https://your-domain/gate.php?clickid={clickid}
 require __DIR__.'/vendor/autoload.php';
-require __DIR__.'/Gate.php';
 
 use FraudNovaGate\Gate;
 

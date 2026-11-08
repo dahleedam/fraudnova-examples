@@ -22,7 +22,7 @@ final class Gate
         'block_on' => ['proxy', 'vpn', 'tor', 'bot_status'],
         'strictness' => 1,
         'cache_ttl' => 86400,
-        'cache_dir' => __DIR__.'/cache',
+        'cache_dir' => __DIR__.'/../cache',
         'timeout_ms' => 2000,
         'fail_open' => true,
         'trust_proxy_headers' => false,
