@@ -1,0 +1,15 @@
+{
+  "name": "fraudnova-tracker-gate",
+  "version": "1.0.0",
+  "description": "Redirect gate for affiliate trackers: scores the visitor IP with FraudNova, then sends them to a money page or a safe page",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@fraudnova/sdk": "^1.0"
+  }
+}
