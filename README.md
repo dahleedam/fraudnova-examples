@@ -146,7 +146,7 @@ A redirect gate for affiliate trackers: it scores each click's IP with FraudNova
 
 **WordPress / WooCommerce** (official plugin)
 
-The [`fraudnova` plugin](https://wordpress.org/plugins/fraudnova/) scores the IP, billing phone and email of every new WooCommerce order and holds or flags risky cash-on-delivery orders. It also blocks throwaway emails and proxy traffic on WordPress and WooCommerce registration and Contact Form 7. Setup and details are in the [WordPress docs](https://fraudnova.com/docs#wordpress), and the source is on [GitHub](https://github.com/dahleedam/fraudnova-wordpress).
+The [`fraudnova` plugin](https://wordpress.org/plugins/fraudnova/) scores the IP, billing phone and email of every new WooCommerce order and holds or flags risky cash-on-delivery orders. It also blocks throwaway emails and abusive traffic on WordPress and WooCommerce registration and Contact Form 7. Setup and details are in the [WordPress docs](https://fraudnova.com/docs#wordpress), and the source is on [GitHub](https://github.com/dahleedam/fraudnova-wordpress).
 
 ## OpenAPI and Postman
 
