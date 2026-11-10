@@ -1,14 +1,67 @@
 # FraudNova n8n workflow templates
 
-Three importable [n8n](https://n8n.io) workflows that add FraudNova fraud checks to an automation you probably already run. They use only n8n's built-in nodes (HTTP Request plus one trigger and one destination each), so there is nothing to install, and they run on n8n Cloud or self-hosted.
+Importable [n8n](https://n8n.io) workflows that add FraudNova fraud checks to an automation you probably already run. The three templates in the table use only n8n's built-in nodes (HTTP Request plus one trigger and one destination each), so there is nothing to install, and they run on n8n Cloud or self-hosted. The [lead gate v2](#lead-gate-v2-community-node-google-sheets-telegram) below is the production version of the first template, built on the FraudNova community node.
 
-Prefer a single node over HTTP Request nodes? Install the [FraudNova community node](https://www.npmjs.com/package/n8n-nodes-fraudnova) (`n8n-nodes-fraudnova`): one credential, IP/email/phone checks, batch support and a `flagged` field for your IF node. These templates stay the no-install option.
+Prefer a single node over HTTP Request nodes? Install the [FraudNova community node](https://www.npmjs.com/package/n8n-nodes-fraudnova) (`n8n-nodes-fraudnova`): one credential, IP/email/phone checks, batch support and a `flagged` field for your IF node. The three templates stay the no-install option.
 
 | File | Trigger | What it checks | Result |
 | --- | --- | --- | --- |
 | [`lead-gate-webhook.json`](lead-gate-webhook.json) | Webhook (`POST /webhook/fraudnova-lead-gate`) with `email` and `ip` in the JSON body | Email (`/check/email`) and IP (`/check`) | Responds `{"accepted": false, "reason": "...", "scores": {...}}` when the email is disposable, either score is at or above the threshold, or the IP is a proxy, VPN or Tor exit; otherwise `{"accepted": true, "scores": {...}}`. Works with your own site or any tool that lets you set the JSON body and read the reply (a custom form handler, another n8n workflow, a Make or Zapier webhook step). Form builders that post a fixed payload without the visitor's IP and ignore the response (for example Tally or Typeform) cannot drive it as-is. If `ip` is missing the IP check errors and is treated as not checked, so the decision rests on the email alone. |
+| [`lead-gate-webhook-v2.json`](lead-gate-webhook-v2.json) | Webhook (`POST /webhook/lead-gate`) with `email`, `phone`, `country`, `ip`, optional `name` and `source` | Email, phone and IP through the FraudNova community node, after a Google Sheets duplicate lookup | Sorts the lead into **accept** (200), **review** (200, Telegram alert) or **reject** (403), appends a row to the matching Sheets tab and always replies. See [Lead gate v2](#lead-gate-v2-community-node-google-sheets-telegram). |
 | [`woocommerce-order-risk-telegram.json`](woocommerce-order-risk-telegram.json) | WooCommerce Trigger, `order.created` | Billing phone and country (`/check/phone`), billing email (`/check/email`), customer IP (`/check`) | Sends a Telegram message with the order number, total, customer name, the three scores and the flags when any score is at or above the threshold, the phone is VOIP or risky, the email is disposable, or the IP is a proxy, VPN or Tor exit. Other orders end the run. |
 | [`sheet-phone-enrichment.json`](sheet-phone-enrichment.json) | Google Sheets Trigger, row added | Phone from the `phone` column and an optional `country` column (`/check/phone`) | Writes `valid`, `line_type`, `carrier`, `fraud_score`, `risky`, `checked_at` and `status` back to the row, matched on `phone` (a duplicate phone number updates the first matching row). A failed check writes `status` = `error`. |
+
+## Lead gate v2 (community node, Google Sheets, Telegram)
+
+[`lead-gate-webhook-v2.json`](lead-gate-webhook-v2.json) is the production version of the lead gate: 21 working nodes instead of 7, built on the [FraudNova community node](https://www.npmjs.com/package/n8n-nodes-fraudnova) rather than HTTP Request nodes. The v1 file stays in place for existing links.
+
+### What changed from v1
+
+| | v1 | v2 |
+| --- | --- | --- |
+| Checks | Email and IP, two HTTP Request nodes | Email, phone (with `country`) and IP, three FraudNova nodes |
+| Missing `ip` | IP check errors, treated as not checked | Falls back to `CF-Connecting-IP`, the first `X-Forwarded-For` address, then `X-Real-IP` |
+| Duplicates | None | Email looked up in the **Leads** tab; a lead seen within `dedupe_hours` (24) is answered `{"duplicate": true, "accepted": true}` and costs no credits |
+| Decision | Accept or reject against one threshold | **Decide** (Code node) takes the highest of the three scores and collects reasons; `review_at` (60) and `reject_at` (85) plus `reject_flags` (`disposable,honeypot,tor`) sort the lead into accept, review or reject |
+| Failed check | Accepted with null scores | Held for **review** with reason `check_failed`: fail open to a human, never a silent accept. If every check failed, the Telegram alert reads "FraudNova checks unavailable" |
+| Storage | None | A row appended to the **Leads**, **Review** or **Rejected** tab of one Google Sheet |
+| Alerts | None | Telegram message for every review case, plus an **Error Trigger** branch that alerts on anything unexpected |
+| Reply | 200 for both outcomes | 200 `{"accepted": true, "score", "scores"}`, 200 `{"accepted": true, "review": true, "score", "reasons"}`, or 403 `{"accepted": false, "reasons", "score"}` |
+
+Decision rules, in order: any flag (proxy, VPN, Tor, bot, disposable, honeypot, VOIP, risky phone, recent abuse, invalid email or phone) or a highest score at or above `review_at` means review; a failed check means review (reason `check_failed`); a lead with no email, phone or IP means review (`nothing_to_check`); a reason listed in `reject_flags`, or a highest score at or above `reject_at`, means reject. A reject decision wins over a failed check, because the lead is already known to be bad. The Decide node is wrapped in `try`/`catch`, so a bug there still ends in review (`decide_error`). Fields that are empty in the request are skipped, not treated as failures, so a form without a phone field works and costs 2 credits instead of 3.
+
+### Setup
+
+1. Install the FraudNova community node (`n8n-nodes-fraudnova`, under **Settings, Community nodes** on self-hosted; on n8n Cloud it is a verified node and shows up in the node panel) and create its credential (**FraudNova API**, named `FraudNova account` to match the import) with a key from [fraudnova.com/dashboard/api-keys](https://fraudnova.com/dashboard/api-keys).
+2. Create a Google Sheet with three tabs named `Leads`, `Review` and `Rejected`, each with this header row in row 1:
+
+   ```
+   created_at, decision, email, phone, country, ip, name, source, max_score, ip_score, email_score, phone_score, reasons, checks_failed
+   ```
+
+   The duplicate lookup reads `email` and `created_at` from the **Leads** tab, so those two columns must exist there. Connect a Google Sheets OAuth2 credential (named `Google Sheets account`) and select it in the four Google Sheets nodes.
+3. Create a Telegram bot, connect it as a Telegram credential (`Telegram account`) and select it in both Telegram nodes.
+4. Open **Settings** and replace `YOUR_GOOGLE_SHEET_ID` (the long id in the sheet's URL) and `YOUR_TELEGRAM_CHAT_ID`. Also set the chat id on **Alert failure** directly: it runs in an error execution where the Settings node is not available.
+5. Activate the workflow and POST a test lead:
+
+   ```bash
+   curl -X POST "https://YOUR-N8N/webhook/lead-gate" -H "Content-Type: application/json" \
+     -d '{"email": "test@mailinator.com", "phone": "+1 817 679 1808", "country": "US", "ip": "185.220.101.1", "name": "Test", "source": "landing-a"}'
+   ```
+
+   Send it twice: the second call returns `duplicate: true` without spending credits.
+
+### Cost
+
+3 credits per new lead (2 when the request has no phone), 0 for duplicates. The FraudNova node times out after 30 seconds per check; a timed-out check counts as failed and sends the lead to review.
+
+### Customization
+
+Change the thresholds, `reject_flags` and `dedupe_hours` in **Settings** (remove `tor` from `reject_flags` if Tor users are welcome; add `vpn` to reject VPNs outright). Replace the two Telegram nodes with Slack, Discord or email. Add your CRM node after **Append to Leads**, or after **Route decision**'s `accept` output if you do not want the sheet.
+
+### Import test
+
+The committed file was validated structurally (`python3 validate.py`, see below) and the Decide node's JavaScript was unit-tested under Node against 16 scenarios (clean, each flag, each threshold, one or all checks failed, a skipped phone, shuffled merge order, a thrown exception). It was **not** imported into a running n8n before it was committed: no n8n instance was available on the machine that produced it. A live import test on n8n Cloud, with the FraudNova node installed and the curl above run twice, is still to be done before the file is submitted anywhere. `python3 validate.py` checks the structure: every node reachable from a trigger, every connection target exists, the three FraudNova nodes continue on error, the four Respond to Webhook nodes each sit on exactly one branch, and the Error Trigger branch stays off the request path.
 
 ## Import a template
 
@@ -71,6 +124,24 @@ Receives a JSON POST with an email address and a visitor IP, checks both with th
 Marketers, affiliates and developers who collect leads through their own form handler and want to filter disposable emails and proxy traffic before the lead reaches a CRM or a network.
 ```
 
+### Lead gate v2 (community node, Sheets, Telegram)
+
+```markdown
+# Score, dedupe and route every lead with FraudNova: accept, review or reject
+
+## What it does
+Receives a lead by webhook (email, phone, country, IP, optional name and source), looks the email up in a Google Sheet to skip duplicates, then runs the FraudNova email, phone and IP checks. A Code node keeps the highest score and collects the reasons (proxy, VPN, Tor, disposable, honeypot, VOIP, recent abuse) and sorts the lead into accept, review or reject. Each outcome appends a row to its own Sheets tab, review cases are sent to Telegram, and the caller always gets a reply (200, or 403 for a reject). A failed check holds the lead for review instead of accepting it silently, and an Error Trigger branch alerts on anything unexpected.
+
+## Setup
+1. Install the FraudNova community node and create its credential with your API key.
+2. Create a Google Sheet with the tabs Leads, Review and Rejected (same header row, listed on the canvas) and connect Google Sheets and Telegram.
+3. Paste the sheet id and chat id into the Settings node and set the thresholds (review at 60, reject at 85).
+4. POST a test lead to the webhook. Each new lead uses 3 credits; duplicates use none.
+
+## Who it is for
+Affiliates, lead-gen teams and developers who want every lead scored, logged and routed before it reaches a CRM or a network, with a human in the loop for the grey zone.
+```
+
 ### WooCommerce order risk alerts on Telegram
 
 ```markdown
@@ -109,7 +180,7 @@ Anyone cleaning a lead or contact list who wants to know which numbers are real,
 
 ## Check the files
 
-`python3 validate.py` verifies the structure of every template (valid JSON, required node keys, connections, credentials by name only, both webhook responders connected, failed checks never read as risky) and the sticky-note rules (one yellow overview with the three headings and 100 to 300 words, white section notes, short red warnings).
+`python3 validate.py` verifies the structure of every template (valid JSON, required node keys, every working node reachable from a trigger, every connection target exists, credentials by name only, both webhook responders connected, failed checks never read as risky) and the sticky-note rules (one yellow overview with the three headings and 100 to 300 words, white section notes, short red warnings). For `lead-gate-webhook-v2.json` it also checks the three FraudNova nodes and every Sheets and Telegram node continue on error, the Merge node is fed by all three checks, each of the four Respond to Webhook nodes sits on exactly one branch, the Error Trigger branch never reaches a responder, only placeholders are present, and the overview ends with the `@[youtube](...)` tutorial embed (it prints a reminder while the id is still `VIDEO_ID`).
 
 ## Publishing to n8n's template library
 
@@ -126,6 +197,8 @@ To submit a template:
 2. Import it into a fresh workflow in n8n.
 3. Follow your own instructions on the canvas (credential, settings, trigger and destination) to confirm they work.
 4. Submit it through the Creator Dashboard (<https://creators.n8n.io>).
+
+To replace a submission the reviewers sent back (the v1 lead gate was declined on 2026-11-09 as too basic; v2 is the answer): in the Creator Dashboard open the pending template, choose **Implement changes**, upload `lead-gate-webhook-v2.json`, then **Submit for human review**. Before that upload, replace `VIDEO_ID` in the overview sticky (`@[youtube](VIDEO_ID)`, last line) with the id of the walkthrough video, and import-test the exact file on n8n Cloud.
 
 ## Using the FraudNova node instead of HTTP Request
 

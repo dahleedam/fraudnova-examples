@@ -1,0 +1,1398 @@
+{
+  "name": "FraudNova lead gate v2 (webhook, Sheets, Telegram)",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Lead gate v2: score, dedupe and route every lead\nChecks each incoming lead with FraudNova (IP, email and phone) and sorts it into accept, review or reject before it reaches your CRM. Duplicates are answered without spending credits, every outcome is logged to a Google Sheet, review cases are sent to Telegram, and the form always gets a reply.\n\n### How it works\n1. A POST to the webhook carries `email`, `phone`, `country`, `ip` (falls back to the forwarded IP) and optional `name` and `source`.\n2. The email is looked up in the **Leads** tab; a lead seen in the last 24 hours is answered with `duplicate: true`.\n3. Three FraudNova checks run (3 credits). **Decide** keeps the highest score and collects reasons: proxy, VPN, Tor, disposable, honeypot, VOIP, recent abuse.\n4. Score below 60 is accepted; 60 to 84, or any flag, goes to review; 85 or more, or a disposable, honeypot or Tor flag, is rejected with HTTP 403. A failed check never rejects: the lead is held for review with `check_failed`.\n\n### Setup\n1. Install the **FraudNova** community node and create its credential with your API key (https://fraudnova.com/dashboard/api-keys; new accounts get free credits).\n2. Create a Google Sheet with the tabs **Leads**, **Review** and **Rejected**, all with the header row listed in the Outcomes note, and connect Google Sheets.\n3. Connect a Telegram bot. Open **Settings** and paste the sheet id and chat id; set the chat id on **Alert failure** as well.\n4. POST a test lead to the production URL.\n\n### Customization\nChange `review_at`, `reject_at`, `reject_flags` or `dedupe_hours` in Settings. Swap Telegram for Slack or email, or add your CRM node after **Append to Leads**.\n\nWatch the walkthrough:\n@[youtube](VIDEO_ID)",
+        "height": 1060,
+        "width": 580,
+        "color": 1
+      },
+      "name": "Overview",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1860,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 1. Intake\nNormalize the lead, then look the email up in the **Leads** tab. A lead seen in the last `dedupe_hours` is answered at once and costs no credits.",
+        "height": 460,
+        "width": 1320,
+        "color": 7
+      },
+      "name": "Section: Intake",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1240,
+        40
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 2. Checks\nThree FraudNova checks, 3 credits per lead. Each node continues on error, so a failed check reaches **Decide** as an error item instead of stopping the run.",
+        "height": 600,
+        "width": 460,
+        "color": 7
+      },
+      "name": "Section: Checks",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        120,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 3. Decision\n**Decide** keeps the highest score, lists the reasons and picks accept, review or reject. A failed check means review, never a silent accept.",
+        "height": 320,
+        "width": 460,
+        "color": 7
+      },
+      "name": "Section: Decision",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        600,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 4. Outcomes\nEvery branch appends a row and replies. Header row for all three tabs:\n`created_at, decision, email, phone, country, ip, name, source, max_score, ip_score, email_score, phone_score, reasons, checks_failed`",
+        "height": 700,
+        "width": 780,
+        "color": 7
+      },
+      "name": "Section: Outcomes",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1080,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 5. Errors\nThe Error Trigger makes this workflow its own error workflow: anything unexpected sends one Telegram alert. Check nodes already continue on error, so the form still gets a reply.",
+        "height": 300,
+        "width": 780,
+        "color": 7
+      },
+      "name": "Section: Errors",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1080,
+        900
+      ]
+    },
+    {
+      "parameters": {
+        "content": "**Set the chat id on Alert failure directly.** Settings is not available in an error run.",
+        "height": 160,
+        "width": 220,
+        "color": 3
+      },
+      "name": "Warning: chat id",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1620,
+        960
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead-gate",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1180,
+        300
+      ],
+      "webhookId": "fraudnova-lead-gate-v2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "settings-1",
+              "name": "review_at",
+              "value": 60,
+              "type": "number"
+            },
+            {
+              "id": "settings-2",
+              "name": "reject_at",
+              "value": 85,
+              "type": "number"
+            },
+            {
+              "id": "settings-3",
+              "name": "reject_flags",
+              "value": "disposable,honeypot,tor",
+              "type": "string"
+            },
+            {
+              "id": "settings-4",
+              "name": "dedupe_hours",
+              "value": 24,
+              "type": "number"
+            },
+            {
+              "id": "settings-5",
+              "name": "sheet_id",
+              "value": "YOUR_GOOGLE_SHEET_ID",
+              "type": "string"
+            },
+            {
+              "id": "settings-6",
+              "name": "telegram_chat_id",
+              "value": "YOUR_TELEGRAM_CHAT_ID",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "name": "Settings",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -960,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "normalize-lead-1",
+              "name": "email",
+              "value": "={{ String($json.body.email || '').trim().toLowerCase() }}",
+              "type": "string"
+            },
+            {
+              "id": "normalize-lead-2",
+              "name": "phone",
+              "value": "={{ String($json.body.phone || '').trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "normalize-lead-3",
+              "name": "country",
+              "value": "={{ String($json.body.country || '').trim().toUpperCase() }}",
+              "type": "string"
+            },
+            {
+              "id": "normalize-lead-4",
+              "name": "ip",
+              "value": "={{ String($json.body.ip || $json.headers['cf-connecting-ip'] || String($json.headers['x-forwarded-for'] || '').split(',')[0] || $json.headers['x-real-ip'] || '').trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "normalize-lead-5",
+              "name": "name",
+              "value": "={{ String($json.body.name || '').trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "normalize-lead-6",
+              "name": "source",
+              "value": "={{ String($json.body.source || 'webhook').trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "normalize-lead-7",
+              "name": "received_at",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "name": "Normalize lead",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -740,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Settings').first().json.sheet_id }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Leads",
+          "mode": "name"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "email",
+              "lookupValue": "={{ $json.email }}"
+            }
+          ]
+        },
+        "combineFilters": "AND",
+        "options": {
+          "returnAllMatches": "returnFirstMatch"
+        }
+      },
+      "name": "Find existing lead",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -520,
+        300
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "name": "Google Sheets account"
+        }
+      },
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "seen-1",
+              "leftValue": "={{ !!$json.email && !!$json.created_at && (Date.now() - new Date($json.created_at).getTime()) < Number($('Settings').first().json.dedupe_hours) * 3600000 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "name": "Seen recently?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -300,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { duplicate: true, accepted: true, message: 'Lead already received in the last ' + $('Settings').first().json.dedupe_hours + ' hours' } }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "name": "Respond duplicate",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -80,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "ip",
+        "operation": "check",
+        "ip": "={{ $('Normalize lead').first().json.ip }}",
+        "options": {}
+      },
+      "name": "Check IP",
+      "type": "n8n-nodes-fraudnova.fraudNova",
+      "typeVersion": 1,
+      "position": [
+        160,
+        300
+      ],
+      "credentials": {
+        "fraudNovaApi": {
+          "name": "FraudNova account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "resource": "email",
+        "operation": "check",
+        "email": "={{ $('Normalize lead').first().json.email }}",
+        "options": {}
+      },
+      "name": "Check email",
+      "type": "n8n-nodes-fraudnova.fraudNova",
+      "typeVersion": 1,
+      "position": [
+        160,
+        480
+      ],
+      "credentials": {
+        "fraudNovaApi": {
+          "name": "FraudNova account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "resource": "phone",
+        "operation": "check",
+        "phone": "={{ $('Normalize lead').first().json.phone }}",
+        "options": {
+          "country": "={{ $('Normalize lead').first().json.country }}"
+        }
+      },
+      "name": "Check phone",
+      "type": "n8n-nodes-fraudnova.fraudNova",
+      "typeVersion": 1,
+      "position": [
+        160,
+        660
+      ],
+      "credentials": {
+        "fraudNovaApi": {
+          "name": "FraudNova account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "name": "Merge checks",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        400,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Reads the three FraudNova results, keeps the highest score, collects reasons\n// and picks accept / review / reject. Any failure here still ends in \"review\".\ntry {\n  const settings = $('Settings').first().json;\n  const lead = $('Normalize lead').first().json;\n  const reviewAt = Number(settings.review_at);\n  const rejectAt = Number(settings.reject_at);\n  const rejectFlags = String(settings.reject_flags || '')\n    .split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);\n\n  // Each FraudNova node outputs one item that carries its subject key (ip / email / phone),\n  // also when the check failed (then it has an `error` field instead of scores).\n  const results = { ip: null, email: null, phone: null };\n  for (const item of $input.all()) {\n    const j = item.json || {};\n    for (const type of ['ip', 'email', 'phone']) {\n      if (Object.prototype.hasOwnProperty.call(j, type)) { results[type] = j; break; }\n    }\n  }\n\n  // API field -> reason name. Phone uses upper-case VOIP in the API.\n  const FLAGS = {\n    ip: { proxy: 'proxy', vpn: 'vpn', tor: 'tor', bot_status: 'bot', recent_abuse: 'recent_abuse' },\n    email: { disposable: 'disposable', honeypot: 'honeypot', recent_abuse: 'recent_abuse' },\n    phone: { VOIP: 'voip', risky: 'risky_phone', recent_abuse: 'recent_abuse' },\n  };\n\n  const reasons = [];\n  const failed = [];\n  const skipped = [];\n  const scores = { ip: null, email: null, phone: null };\n\n  for (const type of ['ip', 'email', 'phone']) {\n    if (!lead[type]) { skipped.push(type); continue; }        // nothing submitted, nothing to check\n    const r = results[type];\n    if (!r || r.error !== undefined) { failed.push(type); continue; } // 402 / 429 / 503 / timeout\n    if (typeof r.fraud_score === 'number') scores[type] = r.fraud_score;\n    for (const [field, reason] of Object.entries(FLAGS[type])) {\n      if (r[field] === true) reasons.push(reason);\n    }\n    if (type !== 'ip' && r.valid === false) reasons.push(type === 'email' ? 'invalid_email' : 'invalid_phone');\n  }\n\n  const checked = ['ip', 'email', 'phone'].filter((t) => !skipped.includes(t));\n  const known = Object.values(scores).filter((v) => typeof v === 'number');\n  const maxScore = known.length ? Math.max(...known) : null;\n\n  let decision = 'accept';\n  if (reasons.length) decision = 'review';                              // any flag gets a human look\n  if (maxScore !== null && maxScore >= reviewAt) decision = 'review';\n  if (failed.length) { reasons.push('check_failed'); decision = 'review'; } // fail open to a human, never a silent accept\n  if (checked.length === 0) { reasons.push('nothing_to_check'); decision = 'review'; }\n  if (reasons.some((r) => rejectFlags.includes(r))) decision = 'reject';\n  if (maxScore !== null && maxScore >= rejectAt) decision = 'reject';\n\n  const unique = [...new Set(reasons)];\n  const ip = results.ip && results.ip.error === undefined ? results.ip : {};\n  const email = results.email && results.email.error === undefined ? results.email : {};\n  const phone = results.phone && results.phone.error === undefined ? results.phone : {};\n\n  return [{ json: {\n    ...lead,\n    decision,\n    max_score: maxScore,\n    reasons: unique,\n    reasons_text: unique.join(', ') || 'none',\n    scores,\n    checks_failed: failed,\n    checks_skipped: skipped,\n    all_checks_failed: checked.length > 0 && failed.length === checked.length,\n    ip_country: ip.country_code || '',\n    ip_isp: ip.ISP || '',\n    email_valid: typeof email.valid === 'boolean' ? email.valid : null,\n    email_deliverability: email.deliverability || '',\n    phone_valid: typeof phone.valid === 'boolean' ? phone.valid : null,\n    phone_line_type: phone.line_type || '',\n    phone_carrier: phone.carrier || '',\n    review_at: reviewAt,\n    reject_at: rejectAt,\n    decided_at: new Date().toISOString(),\n  } }];\n} catch (error) {\n  // A bug in this node must not drop the lead: hold it for review and say why.\n  const lead = $('Normalize lead').first().json;\n  return [{ json: {\n    ...lead,\n    decision: 'review',\n    max_score: null,\n    reasons: ['decide_error'],\n    reasons_text: 'decide_error: ' + (error && error.message ? error.message : String(error)),\n    scores: { ip: null, email: null, phone: null },\n    checks_failed: [],\n    checks_skipped: [],\n    all_checks_failed: false,\n    decided_at: new Date().toISOString(),\n  } }];\n}\n"
+      },
+      "name": "Decide",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        640,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "rule-accept",
+                    "leftValue": "={{ $json.decision }}",
+                    "rightValue": "accept",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "accept"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "rule-review",
+                    "leftValue": "={{ $json.decision }}",
+                    "rightValue": "review",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "review"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "rule-reject",
+                    "leftValue": "={{ $json.decision }}",
+                    "rightValue": "reject",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "reject"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Route decision",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        880,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Settings').first().json.sheet_id }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Leads",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "decision",
+              "displayName": "decision",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "country",
+              "displayName": "country",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ip",
+              "displayName": "ip",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "source",
+              "displayName": "source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "max_score",
+              "displayName": "max_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ip_score",
+              "displayName": "ip_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email_score",
+              "displayName": "email_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "phone_score",
+              "displayName": "phone_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "reasons",
+              "displayName": "reasons",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "checks_failed",
+              "displayName": "checks_failed",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "value": {
+            "created_at": "={{ $json.received_at }}",
+            "decision": "={{ $json.decision }}",
+            "email": "={{ $json.email }}",
+            "phone": "={{ $json.phone }}",
+            "country": "={{ $json.country }}",
+            "ip": "={{ $json.ip }}",
+            "name": "={{ $json.name }}",
+            "source": "={{ $json.source }}",
+            "max_score": "={{ $json.max_score === null ? '' : $json.max_score }}",
+            "ip_score": "={{ $json.scores.ip === null ? '' : $json.scores.ip }}",
+            "email_score": "={{ $json.scores.email === null ? '' : $json.scores.email }}",
+            "phone_score": "={{ $json.scores.phone === null ? '' : $json.scores.phone }}",
+            "reasons": "={{ $json.reasons.join(', ') }}",
+            "checks_failed": "={{ $json.checks_failed.join(', ') }}"
+          }
+        },
+        "options": {}
+      },
+      "name": "Append to Leads",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1120,
+        260
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "name": "Google Sheets account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { accepted: true, score: $('Decide').first().json.max_score, scores: $('Decide').first().json.scores } }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "name": "Respond accepted",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1360,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Settings').first().json.sheet_id }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Review",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "decision",
+              "displayName": "decision",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "country",
+              "displayName": "country",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ip",
+              "displayName": "ip",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "source",
+              "displayName": "source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "max_score",
+              "displayName": "max_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ip_score",
+              "displayName": "ip_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email_score",
+              "displayName": "email_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "phone_score",
+              "displayName": "phone_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "reasons",
+              "displayName": "reasons",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "checks_failed",
+              "displayName": "checks_failed",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "value": {
+            "created_at": "={{ $json.received_at }}",
+            "decision": "={{ $json.decision }}",
+            "email": "={{ $json.email }}",
+            "phone": "={{ $json.phone }}",
+            "country": "={{ $json.country }}",
+            "ip": "={{ $json.ip }}",
+            "name": "={{ $json.name }}",
+            "source": "={{ $json.source }}",
+            "max_score": "={{ $json.max_score === null ? '' : $json.max_score }}",
+            "ip_score": "={{ $json.scores.ip === null ? '' : $json.scores.ip }}",
+            "email_score": "={{ $json.scores.email === null ? '' : $json.scores.email }}",
+            "phone_score": "={{ $json.scores.phone === null ? '' : $json.scores.phone }}",
+            "reasons": "={{ $json.reasons.join(', ') }}",
+            "checks_failed": "={{ $json.checks_failed.join(', ') }}"
+          }
+        },
+        "options": {}
+      },
+      "name": "Append to Review",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1120,
+        480
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "name": "Google Sheets account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $('Settings').first().json.telegram_chat_id }}",
+        "text": "={{ $('Decide').first().json.all_checks_failed ? '<b>FraudNova checks unavailable</b>, lead held for review' : '<b>Lead needs review</b>' }}\nEmail: {{ String($('Decide').first().json.email ?? '').replace(/[<>&]/g, '') || 'none' }}\nPhone: {{ String($('Decide').first().json.phone ?? '').replace(/[<>&]/g, '') || 'none' }}{{ $('Decide').first().json.phone_line_type ? ' (' + String($('Decide').first().json.phone_line_type ?? '').replace(/[<>&]/g, '') + ')' : '' }}\nIP: {{ String($('Decide').first().json.ip ?? '').replace(/[<>&]/g, '') || 'none' }}{{ $('Decide').first().json.ip_country ? ' (' + String($('Decide').first().json.ip_country ?? '').replace(/[<>&]/g, '') + ')' : '' }}\nMax score: {{ $('Decide').first().json.max_score === null ? 'n/a' : $('Decide').first().json.max_score }} (review at {{ $('Decide').first().json.review_at }}, reject at {{ $('Decide').first().json.reject_at }})\nReasons: {{ String($('Decide').first().json.reasons_text ?? '').replace(/[<>&]/g, '') }}\nScores: ip {{ $('Decide').first().json.scores.ip ?? 'n/a' }}, email {{ $('Decide').first().json.scores.email ?? 'n/a' }}, phone {{ $('Decide').first().json.scores.phone ?? 'n/a' }}\nSource: {{ String($('Decide').first().json.source ?? '').replace(/[<>&]/g, '') || 'webhook' }}{{ $('Decide').first().json.name ? ', ' + String($('Decide').first().json.name ?? '').replace(/[<>&]/g, '') : '' }}\nRow added to the Review tab.",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "name": "Alert review",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1360,
+        480
+      ],
+      "credentials": {
+        "telegramApi": {
+          "name": "Telegram account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { accepted: true, review: true, score: $('Decide').first().json.max_score, reasons: $('Decide').first().json.reasons } }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "name": "Respond review",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1600,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Settings').first().json.sheet_id }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Rejected",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "decision",
+              "displayName": "decision",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "country",
+              "displayName": "country",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ip",
+              "displayName": "ip",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "source",
+              "displayName": "source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "max_score",
+              "displayName": "max_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ip_score",
+              "displayName": "ip_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email_score",
+              "displayName": "email_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "phone_score",
+              "displayName": "phone_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "reasons",
+              "displayName": "reasons",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "checks_failed",
+              "displayName": "checks_failed",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "value": {
+            "created_at": "={{ $json.received_at }}",
+            "decision": "={{ $json.decision }}",
+            "email": "={{ $json.email }}",
+            "phone": "={{ $json.phone }}",
+            "country": "={{ $json.country }}",
+            "ip": "={{ $json.ip }}",
+            "name": "={{ $json.name }}",
+            "source": "={{ $json.source }}",
+            "max_score": "={{ $json.max_score === null ? '' : $json.max_score }}",
+            "ip_score": "={{ $json.scores.ip === null ? '' : $json.scores.ip }}",
+            "email_score": "={{ $json.scores.email === null ? '' : $json.scores.email }}",
+            "phone_score": "={{ $json.scores.phone === null ? '' : $json.scores.phone }}",
+            "reasons": "={{ $json.reasons.join(', ') }}",
+            "checks_failed": "={{ $json.checks_failed.join(', ') }}"
+          }
+        },
+        "options": {}
+      },
+      "name": "Append to Rejected",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1120,
+        700
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "name": "Google Sheets account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { accepted: false, reasons: $('Decide').first().json.reasons, score: $('Decide').first().json.max_score } }}",
+        "options": {
+          "responseCode": 403
+        }
+      },
+      "name": "Respond rejected",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1360,
+        700
+      ]
+    },
+    {
+      "parameters": {},
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        1000
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "=<b>Lead gate workflow failed</b>\nWorkflow: {{ String($json.workflow.name ?? '').replace(/[<>&]/g, '') }}\nNode: {{ String($json.execution.lastNodeExecuted ?? '').replace(/[<>&]/g, '') }}\nError: {{ String($json.execution.error.message ?? '').replace(/[<>&]/g, '') }}\nExecution: {{ $json.execution.url }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "name": "Alert failure",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1360,
+        1000
+      ],
+      "credentials": {
+        "telegramApi": {
+          "name": "Telegram account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Settings": {
+      "main": [
+        [
+          {
+            "node": "Normalize lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize lead": {
+      "main": [
+        [
+          {
+            "node": "Find existing lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find existing lead": {
+      "main": [
+        [
+          {
+            "node": "Seen recently?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Seen recently?": {
+      "main": [
+        [
+          {
+            "node": "Respond duplicate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check IP",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Check email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Check phone",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check IP": {
+      "main": [
+        [
+          {
+            "node": "Merge checks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check email": {
+      "main": [
+        [
+          {
+            "node": "Merge checks",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Check phone": {
+      "main": [
+        [
+          {
+            "node": "Merge checks",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Merge checks": {
+      "main": [
+        [
+          {
+            "node": "Decide",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decide": {
+      "main": [
+        [
+          {
+            "node": "Route decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route decision": {
+      "main": [
+        [
+          {
+            "node": "Append to Leads",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append to Review",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append to Rejected",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append to Leads": {
+      "main": [
+        [
+          {
+            "node": "Respond accepted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append to Review": {
+      "main": [
+        [
+          {
+            "node": "Alert review",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Alert review": {
+      "main": [
+        [
+          {
+            "node": "Respond review",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append to Rejected": {
+      "main": [
+        [
+          {
+            "node": "Respond rejected",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Alert failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}
